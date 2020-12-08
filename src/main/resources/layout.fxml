@@ -5,7 +5,11 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
-<Pane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.mitmax.frontend.Controller">
+<GridPane xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="com.mitmax.frontend.Controller"
+          prefWidth="800"
+          prefHeight="800">
     <TabPane tabClosingPolicy="UNAVAILABLE">
         <Tab text="Scanner">
             <VBox spacing="10">
@@ -29,7 +33,7 @@
                     <ComboBox fx:id="cbx_scanCommunity"/>
                     <Button fx:id="btn_scan" text="Scan"/>
                 </HBox>
-                <HBox spacing="10">
+                <HBox fx:id="hbx_display" spacing="10">
                     <ListView fx:id="lsv_records" HBox.hgrow="ALWAYS"/>
                     <TableView fx:id="tbv_varbinds"/>
                 </HBox>
@@ -46,4 +50,4 @@
 
         </Tab>
     </TabPane>
-</Pane>
+</GridPane>

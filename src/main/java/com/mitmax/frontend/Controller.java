@@ -9,7 +9,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import org.soulwing.snmp.Varbind;
 
@@ -30,12 +29,12 @@ public class Controller {
     @FXML
     public void initialize() {
         cbx_mode.setItems(FXCollections.observableArrayList("Host", "Subnetz"));
-        cbx_mode.getSelectionModel().select(1);
         cbx_mode.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             boolean isShown = newValue.intValue() == 1;
             hbx_subnetItems.setVisible(isShown);
             hbx_subnetItems.setManaged(isShown);
         });
+        cbx_mode.getSelectionModel().select(0);
 
         cbx_scanCommunity.setItems(Settings.communities);
         cbx_scanCommunity.getSelectionModel().select(0);
@@ -60,12 +59,14 @@ public class Controller {
         });
         lsv_records.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
                 tbv_varbinds.setItems(newValue.getVarbinds()));
+        lsv_records.setItems(SNMPManager.snmpRecords);
 
         tbv_varbinds.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         addColumn("Name", Varbind::getName);
         addColumn("Value", Varbind::toString);
 
-        HBox.setHgrow(lsv_records, Priority.ALWAYS);
+        lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
+        tbv_varbinds.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     private void onBtn_scan(ActionEvent event) {
