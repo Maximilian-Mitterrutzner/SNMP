@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+<Pane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.mitmax.frontend.Controller">
+    <TabPane tabClosingPolicy="UNAVAILABLE">
+        <Tab text="Scanner">
+            <VBox spacing="10">
+                <padding>
+                    <Insets topRightBottomLeft="10"/>
+                </padding>
+                <HBox spacing="10">
+                    <ComboBox fx:id="cbx_mode"/>
+                    <TextField fx:id="txt_ip" promptText="192.168.1.1"/>
+                    <HBox fx:id="hbx_subnetItems" spacing="10">
+                        <Label text="/">
+                            <padding>
+                                <Insets top="-4" bottom="-4"/>
+                            </padding>
+                            <font>
+                                <Font size="20"/>
+                            </font>
+                        </Label>
+                        <TextField promptText="24"/>
+                    </HBox>
+                    <ComboBox fx:id="cbx_scanCommunity"/>
+                    <Button fx:id="btn_scan" text="Scan"/>
+                </HBox>
+                <HBox spacing="10">
+                    <ListView fx:id="lsv_records" HBox.hgrow="ALWAYS"/>
+                    <TableView fx:id="tbv_varbinds"/>
+                </HBox>
+                <GridPane hgap="10" vgap="2">
+                    <Label text="OID" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="txt_oid" promptText="1.3.6.1.2.1.1.3.0" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <Label GridPane.columnIndex="1" GridPane.rowIndex="0" text="Community"/>
+                    <ComboBox fx:id="cbx_requestCommunity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Button GridPane.columnIndex="2" GridPane.rowIndex="1" text="Retrieve"/>
+                </GridPane>
+            </VBox>
+        </Tab>
+        <Tab text="Settings">
+
+        </Tab>
+    </TabPane>
+</Pane>
