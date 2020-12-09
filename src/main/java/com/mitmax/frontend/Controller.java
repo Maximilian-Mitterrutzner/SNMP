@@ -17,7 +17,7 @@ import java.net.UnknownHostException;
 
 public class Controller {
     public ComboBox<String> cbx_mode;
-    public TextField txt_ip;
+    public TextField txt_scanIp;
     public ComboBox<String> cbx_scanCommunity;
     public ComboBox<String> cbx_requestCommunity;
     public HBox hbx_subnetItems;
@@ -25,6 +25,7 @@ public class Controller {
     public TextField txt_oid;
     public ListView<SNMPRecord> lsv_records;
     public TableView<Varbind> tbv_varbinds;
+    public TextField txt_requestIp;
 
     @FXML
     public void initialize() {
@@ -61,17 +62,16 @@ public class Controller {
                 tbv_varbinds.setItems(newValue.getVarbinds()));
         lsv_records.setItems(SNMPManager.getSnmpRecords());
 
-        tbv_varbinds.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        addColumn("OID", Varbind::getOid);
-        addColumn("Name", varbind -> SNMPManager.getMib().oidToObjectName(varbind.getOid()));
-        addColumn("Value", Varbind::asString);
+        addColumn("OID", 0.2, Varbind::getOid);
+        addColumn("Name", 0.2, varbind -> SNMPManager.getMib().oidToObjectName(varbind.getOid()));
+        addColumn("Value", 0.6, Varbind::asString);
 
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         tbv_varbinds.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     private void onBtn_scan(ActionEvent event) {
-        String address = txt_ip.getText();
+        String address = txt_scanIp.getText();
         try {
             InetAddress.getByName(address);
         } catch (UnknownHostException ex) {
@@ -82,8 +82,10 @@ public class Controller {
         SNMPManager.scanAddress(address, cbx_scanCommunity.getSelectionModel().getSelectedItem());
     }
 
-    private void addColumn(String name, Callback<Varbind, String> callback) {
+    private void addColumn(String name, double size, Callback<Varbind, String> callback) {
         TableColumn<Varbind, String> column = new TableColumn<>(name);
+        column.prefWidthProperty().bind(tbv_varbinds.widthProperty().multiply(size).subtract(1));
+        column.setResizable(false);
         column.setCellValueFactory(param -> new SimpleStringProperty(callback.call(param.getValue())));
         tbv_varbinds.getColumns().add(column);
     }
