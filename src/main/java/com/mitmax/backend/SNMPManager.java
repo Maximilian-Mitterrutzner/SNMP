@@ -9,29 +9,41 @@ import org.soulwing.snmp.MibFactory;
 import java.io.IOException;
 
 public class SNMPManager {
-    private static ObservableList<SNMPRecord> snmpRecords;
+    private static ObservableList<SNMPTarget> snmpTargets;
     private static Mib mib;
 
     public static void scanAddress(String ip, String community) {
-        SNMPRecord record = new SNMPRecord(ip, community);
-        record.retrieve(Settings.initialRequests.toArray(new String[0]));
-        getSnmpRecords().add(record);
+        SNMPTarget target = null;
+
+        for(SNMPTarget currentTarget : getSnmpTargets()) {
+            if(currentTarget.getIp().equals(ip)) {
+                target = currentTarget;
+                break;
+            }
+        }
+
+        if(target == null) {
+            target = new SNMPTarget(ip);
+            getSnmpTargets().add(target);
+        }
+
+        target.retrieve(community, Settings.initialRequests.toArray(new String[0]));
     }
 
     public static void closeAll() {
-        for(SNMPRecord record : getSnmpRecords()) {
-            record.close();
+        for(SNMPTarget target : getSnmpTargets()) {
+            target.close();
         }
     }
 
-    public static ObservableList<SNMPRecord> getSnmpRecords() {
-        if(snmpRecords == null) {
-            snmpRecords = FXCollections.observableArrayList();
+    public static ObservableList<SNMPTarget> getSnmpTargets() {
+        if(snmpTargets == null) {
+            snmpTargets = FXCollections.observableArrayList();
         }
-        return snmpRecords;
+        return snmpTargets;
     }
 
-    public static Mib getMib() {
+    static Mib getMib() {
         if(mib == null) {
             mib = MibFactory.getInstance().newMib();
             try {

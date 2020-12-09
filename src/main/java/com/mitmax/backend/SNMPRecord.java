@@ -4,10 +4,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.soulwing.snmp.*;
 
-public class SNMPRecord {
+class SNMPRecord {
     private SnmpContext context;
     private ObservableList<Varbind> varbinds;
-    private String ip;
 
     SNMPRecord(String ip, String community) {
         SimpleSnmpV2cTarget target = new SimpleSnmpV2cTarget();
@@ -15,7 +14,6 @@ public class SNMPRecord {
         target.setCommunity(community);
         context = SnmpFactory.getInstance().newContext(target, SNMPManager.getMib());
 
-        this.ip = ip;
         varbinds = FXCollections.observableArrayList();
     }
 
@@ -27,11 +25,7 @@ public class SNMPRecord {
         context.close();
     }
 
-    public ObservableList<Varbind> getVarbinds() {
+    ObservableList<Varbind> getVarbinds() {
         return varbinds;
-    }
-
-    public String getIp() {
-        return ip;
     }
 }

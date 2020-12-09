@@ -35,7 +35,14 @@
                 </HBox>
                 <GridPane hgap="10">
                     <ListView fx:id="lsv_records" GridPane.columnIndex="0"/>
-                    <TableView fx:id="tbv_varbinds" GridPane.columnIndex="1"/>
+                    <TabPane fx:id="tbp_communities"
+                             GridPane.columnIndex="1"
+                             tabClosingPolicy="UNAVAILABLE"
+                             styleClass="floating">
+                        <padding>
+                            <Insets top="-5"/>
+                        </padding>
+                    </TabPane>
                     <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" percentWidth="30.0"/>
                         <ColumnConstraints hgrow="SOMETIMES" percentWidth="70.0"/>
