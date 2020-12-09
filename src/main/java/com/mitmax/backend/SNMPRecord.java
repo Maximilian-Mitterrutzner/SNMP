@@ -20,7 +20,7 @@ public class SNMPRecord {
     }
 
     void retrieve(String... oid) {
-        varbinds.addAll(context.get(oid).get().asList());
+        varbinds.addAll(context.getNext(oid).get().asList());
     }
 
     void close() {

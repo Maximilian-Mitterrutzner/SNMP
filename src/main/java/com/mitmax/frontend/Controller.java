@@ -14,6 +14,7 @@ import org.soulwing.snmp.Varbind;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.function.Predicate;
 
 public class Controller {
     public ComboBox<String> cbx_mode;
@@ -54,6 +55,12 @@ public class Controller {
                     setText(null);
                     setGraphic(null);
                 } else {
+                    for(Varbind varbind : item.getVarbinds()) {
+                        if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
+                            setText(varbind.asString() + " (" + item.getIp() + ")");
+                            return;
+                        }
+                    }
                     setText(item.getIp());
                 }
             }
@@ -63,7 +70,7 @@ public class Controller {
         lsv_records.setItems(SNMPManager.getSnmpRecords());
 
         addColumn("OID", 0.2, Varbind::getOid);
-        addColumn("Name", 0.2, varbind -> SNMPManager.getMib().oidToObjectName(varbind.getOid()));
+        addColumn("Name", 0.2, Varbind::getName);
         addColumn("Value", 0.6, Varbind::asString);
 
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
