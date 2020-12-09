@@ -33,7 +33,7 @@
                     <ComboBox fx:id="cbx_scanCommunity"/>
                     <Button fx:id="btn_scan" text="Scan"/>
                 </HBox>
-                <HBox fx:id="hbx_display" spacing="10">
+                <HBox spacing="10">
                     <ListView fx:id="lsv_records" HBox.hgrow="ALWAYS"/>
                     <TableView fx:id="tbv_varbinds"/>
                 </HBox>

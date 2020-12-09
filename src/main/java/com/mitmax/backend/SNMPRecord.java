@@ -13,7 +13,7 @@ public class SNMPRecord {
         SimpleSnmpV2cTarget target = new SimpleSnmpV2cTarget();
         target.setAddress(ip);
         target.setCommunity(community);
-        context = SnmpFactory.getInstance().newContext(target);
+        context = SnmpFactory.getInstance().newContext(target, SNMPManager.getMib());
 
         this.ip = ip;
         varbinds = FXCollections.observableArrayList();

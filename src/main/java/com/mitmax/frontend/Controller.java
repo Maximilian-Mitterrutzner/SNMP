@@ -59,11 +59,12 @@ public class Controller {
         });
         lsv_records.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
                 tbv_varbinds.setItems(newValue.getVarbinds()));
-        lsv_records.setItems(SNMPManager.snmpRecords);
+        lsv_records.setItems(SNMPManager.getSnmpRecords());
 
         tbv_varbinds.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        addColumn("Name", Varbind::getName);
-        addColumn("Value", Varbind::toString);
+        addColumn("OID", Varbind::getOid);
+        addColumn("Name", varbind -> SNMPManager.getMib().oidToObjectName(varbind.getOid()));
+        addColumn("Value", Varbind::asString);
 
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         tbv_varbinds.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
