@@ -18,7 +18,8 @@ class SNMPRecord {
         target.setAddress(ip);
         target.setCommunity(community);
         SimpleSnmpTargetConfig config = new SimpleSnmpTargetConfig();
-        config.setTimeout(1000);
+        config.setTimeout(2000);
+        config.setRetries(1);
         context = SnmpFactory.getInstance().newContext(target, SNMPManager.getMib(), config, null);
 
         varbinds = FXCollections.observableArrayList();
@@ -29,7 +30,10 @@ class SNMPRecord {
         context.asyncGetNext(event -> {
             try {
                 VarbindCollection received = event.getResponse().get();
-                Platform.runLater(() -> varbinds.addAll(received.asList()));
+                Platform.runLater(() -> {
+                    varbinds.addAll(received.asList());
+                    Controller.refreshListView();
+                });
             } catch (TimeoutException ex) {
                 Controller.log("Request to " + ip + " for " + Arrays.toString(oid) + " timed out!");
             } catch (SnmpException ex) {

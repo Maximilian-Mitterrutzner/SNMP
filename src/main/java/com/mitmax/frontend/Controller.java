@@ -28,7 +28,9 @@ public class Controller {
     public TextField txt_requestIp;
     public TabPane tbp_communities;
     public TextArea txa_log;
+
     private static TextArea staticTxa_log;
+    private static ListView<SNMPTarget> staticLsv_records;
 
     private TableView<Varbind> tbv_varbinds;
 
@@ -101,6 +103,7 @@ public class Controller {
         tbp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         staticTxa_log = txa_log;
+        staticLsv_records = lsv_records;
     }
 
     private void onBtn_scan(ActionEvent event) {
@@ -129,5 +132,9 @@ public class Controller {
 
     public static void log(String message) {
         Platform.runLater(() -> staticTxa_log.appendText(message));
+    }
+
+    public static void refreshListView() {
+        staticLsv_records.refresh();
     }
 }
