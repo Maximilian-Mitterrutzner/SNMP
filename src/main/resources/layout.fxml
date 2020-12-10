@@ -57,7 +57,7 @@
                     <ComboBox fx:id="cbx_requestCommunity" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
                     <Button GridPane.columnIndex="3" GridPane.rowIndex="1" text="Retrieve"/>
                 </GridPane>
-                <TextArea minHeight="150"/>
+                <TextArea fx:id="txa_log" minHeight="150" editable="false"/>
             </VBox>
         </Tab>
         <Tab text="Settings">

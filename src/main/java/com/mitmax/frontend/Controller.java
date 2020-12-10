@@ -27,6 +27,8 @@ public class Controller {
     public ListView<SNMPTarget> lsv_records;
     public TextField txt_requestIp;
     public TabPane tbp_communities;
+    public TextArea txa_log;
+    private static TextArea staticTxa_log;
 
     private TableView<Varbind> tbv_varbinds;
 
@@ -97,6 +99,8 @@ public class Controller {
 
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         tbp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+        staticTxa_log = txa_log;
     }
 
     private void onBtn_scan(ActionEvent event) {
@@ -121,5 +125,9 @@ public class Controller {
 
     private void onSelectionChanged(Tab selectedTab, SNMPTarget selectedRecord) {
         tbv_varbinds.setItems(selectedRecord.getVarbinds(selectedTab.getText()));
+    }
+
+    public static void log(String message) {
+        Platform.runLater(() -> staticTxa_log.appendText(message));
     }
 }
