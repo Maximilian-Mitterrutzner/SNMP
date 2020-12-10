@@ -12,6 +12,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.soulwing.snmp:tnm4j:1.0.10" level="project" />
+    <orderEntry type="library" name="Maven: org.soulwing.snmp:tnm4j:1.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.snmp4j:snmp4j:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: net.percederberg.mibble:mibble:2.9.3" level="project" />
     <orderEntry type="library" name="Maven: net.percederberg.grammatica:grammatica:1.5" level="project" />
