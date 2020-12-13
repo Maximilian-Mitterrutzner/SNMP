@@ -12,6 +12,7 @@ class SNMPRecord {
     private SnmpContext context;
     private ObservableList<Varbind> varbinds;
     private final String ip;
+    private final String community;
 
     SNMPRecord(String ip, String community) {
         SimpleSnmpV2cTarget target = new SimpleSnmpV2cTarget();
@@ -24,6 +25,7 @@ class SNMPRecord {
 
         varbinds = FXCollections.observableArrayList();
         this.ip = ip;
+        this.community = community;
     }
 
     void retrieve(String... oid) {
@@ -35,7 +37,7 @@ class SNMPRecord {
                     Controller.refreshListView();
                 });
             } catch (TimeoutException ex) {
-                Controller.log("Request to " + ip + " for " + Arrays.toString(oid) + " timed out!");
+                Controller.log("Request timed out! (" + ip + " - " + community + " - " + Arrays.toString(oid) + ")");
             } catch (SnmpException ex) {
                 Controller.log("An SNMP-Exception occurred, please restart the application");
             } catch (Exception ex) {

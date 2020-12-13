@@ -131,7 +131,7 @@ public class Controller {
     }
 
     public static void log(String message) {
-        Platform.runLater(() -> staticTxa_log.appendText(message));
+        Platform.runLater(() -> staticTxa_log.appendText(message + "\n"));
     }
 
     public static void refreshListView() {
