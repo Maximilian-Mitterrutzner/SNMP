@@ -1,8 +1,14 @@
 # SNMP
 A simple SNMP-Scanner based on the tnm4j-library.
+To run the scanner on your computer, download the executable jar file from the latest release and run the following 
+command in the folder, where you downloaded it: ```java -jar [JAR-NAME]```.  
+The jar has to be executed using Java 8. To verify whether you are running Java 8, run the command ```java -version```. 
+The first line of the output should look similar to this: ```java version "1.8.0_181"```.  
+Alternatively, you can build the project yourself, you will need to have JDK 1.8.0 installed though. For additional 
+instructions refer to the following section. 
 
-## Installation
-To install this Scanner, import the project into your favourite IDE.
+## Build the project yourself
+To build the Scanner on your own, import the project into your favourite IDE.
 For this example, I will use IntelliJ IDEA (Community Version). The Community Version can be downloaded for free from [here](https://www.jetbrains.com/idea/download).
 1. Open IntelliJ IDEA.
 2. Navigate to File > New > Project from Version Control... > Git  
