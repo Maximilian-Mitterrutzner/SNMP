@@ -6,7 +6,7 @@
 
     <groupId>com.mitmax</groupId>
     <artifactId>SNMP</artifactId>
-    <version>0.2.2</version>
+    <version>0.3</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
