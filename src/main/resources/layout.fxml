@@ -5,6 +5,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
+<?import com.mitmax.frontend.EditableListView?>
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="com.mitmax.frontend.Controller"
@@ -61,7 +62,23 @@
             </VBox>
         </Tab>
         <Tab text="Settings">
-
+            <HBox>
+                <EditableListView fx:id="lsv_communities">
+                    <padding>
+                        <Insets topRightBottomLeft="10"/>
+                    </padding>
+                </EditableListView>
+                <EditableListView fx:id="lsv_initialRequests">
+                    <padding>
+                        <Insets topRightBottomLeft="10"/>
+                    </padding>
+                </EditableListView>
+                <EditableListView fx:id="lsv_mibModules">
+                    <padding>
+                        <Insets topRightBottomLeft="10"/>
+                    </padding>
+                </EditableListView>
+            </HBox>
         </Tab>
     </TabPane>
 </GridPane>

@@ -28,6 +28,9 @@ public class Controller {
     public TextField txt_requestIp;
     public TabPane tbp_communities;
     public TextArea txa_log;
+    public EditableListView lsv_communities;
+    public EditableListView lsv_initialRequests;
+    public EditableListView lsv_mibModules;
 
     private static TextArea staticTxa_log;
     private static ListView<SNMPTarget> staticLsv_records;
@@ -101,6 +104,17 @@ public class Controller {
 
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         tbp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+        lsv_communities.setBackingList(Settings.communities);
+        lsv_communities.setNewText("Community");
+        lsv_communities.setTitleText("Communities");
+        lsv_communities.setMinItems(1);
+        lsv_initialRequests.setBackingList(Settings.initialRequests);
+        lsv_initialRequests.setNewText("Request");
+        lsv_initialRequests.setTitleText("Initial Requests");
+        lsv_mibModules.setBackingList(Settings.mibModules);
+        lsv_mibModules.setNewText("Module");
+        lsv_mibModules.setTitleText("MIB Modules");
 
         staticTxa_log = txa_log;
         staticLsv_records = lsv_records;
