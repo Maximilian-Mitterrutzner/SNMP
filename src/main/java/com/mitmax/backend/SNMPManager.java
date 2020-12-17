@@ -57,4 +57,8 @@ public class SNMPManager {
         }
         return mib;
     }
+
+    static void removeTarget(SNMPTarget target) {
+        Platform.runLater(() -> getSnmpTargets().remove(target));
+    }
 }

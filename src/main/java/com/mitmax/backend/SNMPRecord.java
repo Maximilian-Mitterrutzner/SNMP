@@ -13,8 +13,10 @@ class SNMPRecord {
     private ObservableList<Varbind> varbinds;
     private final String ip;
     private final String community;
+    private final SNMPTarget parent;
+    private int pendingRequests;
 
-    SNMPRecord(String ip, String community) {
+    SNMPRecord(String ip, String community, SNMPTarget parent) {
         SimpleSnmpV2cTarget target = new SimpleSnmpV2cTarget();
         target.setAddress(ip);
         target.setCommunity(community);
@@ -26,9 +28,11 @@ class SNMPRecord {
         varbinds = FXCollections.observableArrayList();
         this.ip = ip;
         this.community = community;
+        this.parent = parent;
     }
 
     void retrieve(String... oid) {
+        pendingRequests++;
         context.asyncGetNext(event -> {
             try {
                 VarbindCollection received = event.getResponse().get();
@@ -38,12 +42,14 @@ class SNMPRecord {
                 });
             } catch (TimeoutException ex) {
                 Controller.log("Request timed out! (" + ip + " - " + community + " - " + Arrays.toString(oid) + ")");
+                parent.removeIfEmpty();
             } catch (SnmpException ex) {
                 Controller.log("An SNMP-Exception occurred, please restart the application");
             } catch (Exception ex) {
                 System.out.println("Unexpected Exception: ");
                 ex.printStackTrace();
             }
+            pendingRequests--;
         }, oid);
     }
 
@@ -53,5 +59,9 @@ class SNMPRecord {
 
     ObservableList<Varbind> getVarbinds() {
         return varbinds;
+    }
+
+    int getPendingRequests() {
+        return pendingRequests;
     }
 }

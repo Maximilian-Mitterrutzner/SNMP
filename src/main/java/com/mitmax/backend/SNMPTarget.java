@@ -14,7 +14,7 @@ public class SNMPTarget {
         records = new HashMap<>();
 
         for(String community : Settings.communities) {
-            records.put(community, new SNMPRecord(ip, community));
+            records.put(community, new SNMPRecord(ip, community, this));
         }
     }
 
@@ -30,6 +30,14 @@ public class SNMPTarget {
 
     public ObservableList<Varbind> getVarbinds(String community) {
         return records.get(community).getVarbinds();
+    }
+
+    void removeIfEmpty() {
+        for(SNMPRecord record : records.values()) {
+            if(record.getVarbinds().size() == 0 && record.getPendingRequests() == 0) {
+                SNMPManager.removeTarget(this);
+            }
+        }
     }
 
     public String getIp() {

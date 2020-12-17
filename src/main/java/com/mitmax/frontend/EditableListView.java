@@ -1,6 +1,5 @@
 package com.mitmax.frontend;
 
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

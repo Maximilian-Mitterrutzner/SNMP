@@ -141,6 +141,10 @@ public class Controller {
     }
 
     private void onSelectionChanged(Tab selectedTab, SNMPTarget selectedRecord) {
+        if(selectedRecord == null) {
+            tbv_varbinds.setItems(null);
+            return;
+        }
         tbv_varbinds.setItems(selectedRecord.getVarbinds(selectedTab.getText()));
     }
 
