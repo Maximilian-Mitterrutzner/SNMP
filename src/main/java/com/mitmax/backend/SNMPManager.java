@@ -30,6 +30,18 @@ public class SNMPManager {
         target.retrieve(community, Settings.initialRequests.toArray(new String[0]));
     }
 
+    public static void scanSubnet(String ip, String community, int mask) {
+        int wildcard = 32 - mask;
+        long binaryWildcard = (long) (Math.pow(2, wildcard) - 1);
+        long netId = (AddressHelper.getAsBinary(ip) >> wildcard) << wildcard;
+        long broadcast = netId | binaryWildcard;
+
+        long currentAddress = netId;
+        while(++currentAddress != broadcast) {
+            scanAddress(AddressHelper.getAsString(currentAddress), community);
+        }
+    }
+
     public static void closeAll() {
         for(SNMPTarget target : getSnmpTargets()) {
             target.close();

@@ -31,6 +31,7 @@ public class Controller {
     public EditableListView lsv_communities;
     public EditableListView lsv_initialRequests;
     public EditableListView lsv_mibModules;
+    public TextField txt_mask;
 
     private static TextArea staticTxa_log;
     private static ListView<SNMPTarget> staticLsv_records;
@@ -39,7 +40,7 @@ public class Controller {
 
     @FXML
     public void initialize() {
-        cbx_mode.setItems(FXCollections.observableArrayList("Host", "Subnetz"));
+        cbx_mode.setItems(FXCollections.observableArrayList("Host", "Subnet"));
         cbx_mode.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             boolean isShown = newValue.intValue() == 1;
             hbx_subnetItems.setVisible(isShown);
@@ -121,6 +122,7 @@ public class Controller {
     }
 
     private void onBtn_scan(ActionEvent event) {
+        String community = cbx_scanCommunity.getSelectionModel().getSelectedItem();
         String address = txt_scanIp.getText();
         try {
             InetAddress.getByName(address);
@@ -129,7 +131,23 @@ public class Controller {
             return;
         }
 
-        SNMPManager.scanAddress(address, cbx_scanCommunity.getSelectionModel().getSelectedItem());
+        switch (cbx_mode.getSelectionModel().getSelectedItem()) {
+            case "Host":
+                SNMPManager.scanAddress(address, community);
+                break;
+            case "Subnet":
+                try {
+                    int mask = Integer.parseInt(txt_mask.getText());
+                    if(mask < 1 || mask > 32) {
+                        throw new NumberFormatException();
+                    }
+                    SNMPManager.scanSubnet(address, community, mask);
+                }
+                catch (NumberFormatException ex) {
+                    //TODO set text color to red
+                }
+                break;
+        }
     }
 
     private void addColumn(String name, double size, Callback<Varbind, String> callback) {

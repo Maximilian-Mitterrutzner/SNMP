@@ -29,7 +29,7 @@
                                 <Font size="20"/>
                             </font>
                         </Label>
-                        <TextField promptText="24"/>
+                        <TextField promptText="24" fx:id="txt_mask"/>
                     </HBox>
                     <ComboBox fx:id="cbx_scanCommunity"/>
                     <Button fx:id="btn_scan" text="Scan"/>
