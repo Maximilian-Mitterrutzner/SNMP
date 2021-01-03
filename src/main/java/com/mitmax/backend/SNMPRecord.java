@@ -6,15 +6,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.soulwing.snmp.*;
 
-import java.util.Arrays;
+import java.util.List;
 
 class SNMPRecord {
-    private SnmpContext context;
-    private ObservableList<Varbind> varbinds;
+    private final SnmpContext context;
+    private final ObservableList<Varbind> varbinds;
     private final String ip;
     private final String community;
     private final SNMPTarget parent;
-    private int pendingRequests;
 
     SNMPRecord(String ip, String community, SNMPTarget parent) {
         SimpleSnmpV2cTarget target = new SimpleSnmpV2cTarget();
@@ -31,26 +30,30 @@ class SNMPRecord {
         this.parent = parent;
     }
 
-    void retrieve(String... oid) {
-        pendingRequests++;
+    void retrieve(List<String> oids) {
         context.asyncGetNext(event -> {
             try {
                 VarbindCollection received = event.getResponse().get();
                 Platform.runLater(() -> {
+                    for(Varbind varbind : received) {
+                        if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
+                            parent.setHostName(varbind.asString() + " (" + ip + ")");
+                            Controller.refreshListView();
+                            break;
+                        }
+                    }
                     varbinds.addAll(received.asList());
-                    Controller.refreshListView();
+                    parent.addSelfToList();
                 });
             } catch (TimeoutException ex) {
-                Controller.log("Request timed out! (" + ip + " - " + community + " - " + Arrays.toString(oid) + ")");
-                parent.removeIfEmpty();
+                Controller.log("Request timed out! (" + ip + " - " + community + " - " + oids.toString() + ")");
             } catch (SnmpException ex) {
                 Controller.log("An SNMP-Exception occurred, please restart the application");
             } catch (Exception ex) {
                 System.out.println("Unexpected Exception: ");
                 ex.printStackTrace();
             }
-            pendingRequests--;
-        }, oid);
+        }, oids);
     }
 
     void close() {
@@ -59,9 +62,5 @@ class SNMPRecord {
 
     ObservableList<Varbind> getVarbinds() {
         return varbinds;
-    }
-
-    int getPendingRequests() {
-        return pendingRequests;
     }
 }

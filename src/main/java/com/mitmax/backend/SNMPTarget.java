@@ -4,22 +4,27 @@ import javafx.collections.ObservableList;
 import org.soulwing.snmp.Varbind;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class SNMPTarget {
-    private String ip;
-    private HashMap<String, SNMPRecord> records;
+    private final String ip;
+    private final HashMap<String, SNMPRecord> records;
+    private String hostName;
+    private boolean isAdded;
 
     SNMPTarget(String ip) {
         this.ip = ip;
-        records = new HashMap<>();
+        records = new HashMap<>(Settings.communities.size());
+        hostName = ip;
+        isAdded = false;
 
         for(String community : Settings.communities) {
             records.put(community, new SNMPRecord(ip, community, this));
         }
     }
 
-    void retrieve(String community, String... oid) {
-        records.get(community).retrieve(oid);
+    void retrieve(String community, List<String> oids) {
+        records.get(community).retrieve(oids);
     }
 
     void close() {
@@ -32,15 +37,22 @@ public class SNMPTarget {
         return records.get(community).getVarbinds();
     }
 
-    void removeIfEmpty() {
-        for(SNMPRecord record : records.values()) {
-            if(record.getVarbinds().size() == 0 && record.getPendingRequests() == 0) {
-                SNMPManager.removeTarget(this);
-            }
+    void addSelfToList() {
+        if(!isAdded) {
+            isAdded = true;
+            SNMPManager.addTarget(this);
         }
     }
 
     public String getIp() {
         return ip;
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    void setHostName(String hostName) {
+        this.hostName = hostName;
     }
 }

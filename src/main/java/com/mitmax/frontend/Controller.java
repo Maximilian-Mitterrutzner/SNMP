@@ -6,6 +6,7 @@ import com.mitmax.backend.Settings;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -65,15 +66,7 @@ public class Controller {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    for(String community : Settings.communities) {
-                        for(Varbind varbind : item.getVarbinds(community)) {
-                            if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
-                                setText(varbind.asString() + " (" + item.getIp() + ")");
-                                return;
-                            }
-                        }
-                    }
-                    setText(item.getIp());
+                    setText(item.getHostName());
                 }
             }
         });
@@ -82,7 +75,14 @@ public class Controller {
                 onSelectionChanged(tbp_communities.getSelectionModel().getSelectedItem(), newRecord);
             }
         });
-        lsv_records.setItems(SNMPManager.getSnmpTargets());
+        SNMPManager.getSnmpTargets().addListener((MapChangeListener<String, SNMPTarget>) change -> {
+            if(change.wasRemoved()) {
+                lsv_records.getItems().remove(change.getValueRemoved());
+            }
+            if(change.wasAdded()) {
+                lsv_records.getItems().add(change.getValueAdded());
+            }
+        });
         tbv_varbinds = new TableView<>();
         addColumn("OID", 0.2, Varbind::getOid);
         addColumn("Name", 0.2, Varbind::getName);
