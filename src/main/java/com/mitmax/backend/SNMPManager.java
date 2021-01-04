@@ -26,17 +26,19 @@ public class SNMPManager {
     }
 
     public static void scanAddress(String ip, String community) {
-        SNMPTarget target = snmpTargets.get(ip);
+        new Thread(() -> {
+            SNMPTarget target = snmpTargets.get(ip);
 
-        if(target == null) {
-            target = new SNMPTarget(ip);
-        }
+            if(target == null) {
+                target = new SNMPTarget(ip);
+            }
 
-        target.retrieve(community, Settings.initialRequests);
+            target.retrieve(community, Settings.initialRequests);
+        }).start();
     }
 
     public static void scanSubnet(String ip, String community, int mask) {
-        new Thread(() -> {
+        Thread scanThread = new Thread(() -> {
             int wildcard = 32 - mask;
             long binaryWildcard = (long) (Math.pow(2, wildcard) - 1);
             long netId = (AddressHelper.getAsBinary(ip) >> wildcard) << wildcard;
@@ -46,7 +48,9 @@ public class SNMPManager {
             while(++currentAddress != broadcast) {
                 scanAddress(AddressHelper.getAsString(currentAddress), community);
             }
-        }).start();
+        });
+        scanThread.setPriority(Thread.MIN_PRIORITY);
+        scanThread.start();
     }
 
     public static void closeAll() {

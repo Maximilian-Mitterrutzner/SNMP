@@ -3,7 +3,6 @@ package com.mitmax.frontend;
 import com.mitmax.backend.SNMPManager;
 import com.mitmax.backend.SNMPTarget;
 import com.mitmax.backend.Settings;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -34,10 +33,10 @@ public class Controller {
     public EditableListView lsv_mibModules;
     public TextField txt_mask;
 
-    private static TextArea staticTxa_log;
     private static ListView<SNMPTarget> staticLsv_records;
 
     private TableView<Varbind> tbv_varbinds;
+    private static Logger logger;
 
     @FXML
     public void initialize() {
@@ -117,8 +116,9 @@ public class Controller {
         lsv_mibModules.setNewText("Module");
         lsv_mibModules.setTitleText("MIB Modules");
 
-        staticTxa_log = txa_log;
         staticLsv_records = lsv_records;
+
+        logger = new Logger(txa_log);
     }
 
     private void onBtn_scan(ActionEvent event) {
@@ -167,7 +167,7 @@ public class Controller {
     }
 
     public static void log(String message) {
-        Platform.runLater(() -> staticTxa_log.appendText(message + "\n"));
+        logger.log(message);
     }
 
     public static void refreshListView() {
