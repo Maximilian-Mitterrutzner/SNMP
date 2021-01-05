@@ -62,23 +62,53 @@
             </VBox>
         </Tab>
         <Tab text="Settings">
-            <HBox>
-                <EditableListView fx:id="lsv_communities">
+            <VBox>
+                <HBox>
                     <padding>
                         <Insets topRightBottomLeft="10"/>
                     </padding>
-                </EditableListView>
-                <EditableListView fx:id="lsv_initialRequests">
-                    <padding>
-                        <Insets topRightBottomLeft="10"/>
-                    </padding>
-                </EditableListView>
-                <EditableListView fx:id="lsv_mibModules">
-                    <padding>
-                        <Insets topRightBottomLeft="10"/>
-                    </padding>
-                </EditableListView>
-            </HBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER">
+                        <Label text="Timeout length"/>
+                        <HBox spacing="5">
+                            <TextField fx:id="txt_timeout" text="5000" maxWidth="60"/>
+                            <Label text="ms">
+                                <padding>
+                                    <Insets top="3"/>
+                                </padding>
+                            </Label>
+                        </HBox>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox>
+                        <Label text="Log level"/>
+                        <fx:define>
+                            <ToggleGroup fx:id="tgg_logLevel"/>
+                        </fx:define>
+                        <RadioButton text="Log nothing (Disables the logarea completely)" toggleGroup="$tgg_logLevel"/>
+                        <RadioButton text="Log information only for non-subnets (Improves performance for larger subnets)" selected="true" toggleGroup="$tgg_logLevel"/>
+                        <RadioButton text="Log everything (May take some time for larger subnets)" toggleGroup="$tgg_logLevel"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox VBox.vgrow="ALWAYS">
+                    <EditableListView fx:id="lsv_communities">
+                        <padding>
+                            <Insets topRightBottomLeft="10"/>
+                        </padding>
+                    </EditableListView>
+                    <EditableListView fx:id="lsv_initialRequests">
+                        <padding>
+                            <Insets topRightBottomLeft="10"/>
+                        </padding>
+                    </EditableListView>
+                    <EditableListView fx:id="lsv_mibModules">
+                        <padding>
+                            <Insets topRightBottomLeft="10"/>
+                        </padding>
+                    </EditableListView>
+                </HBox>
+            </VBox>
         </Tab>
     </TabPane>
 </GridPane>

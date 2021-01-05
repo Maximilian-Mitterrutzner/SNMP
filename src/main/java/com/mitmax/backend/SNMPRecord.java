@@ -1,6 +1,7 @@
 package com.mitmax.backend;
 
 import com.mitmax.frontend.Controller;
+import com.mitmax.frontend.LogLevel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,7 +21,7 @@ class SNMPRecord {
         target.setAddress(ip);
         target.setCommunity(community);
         SimpleSnmpTargetConfig config = new SimpleSnmpTargetConfig();
-        config.setTimeout(2000);
+        config.setTimeout(Controller.getTimeout() / 2);
         config.setRetries(1);
         context = SnmpFactory.getInstance().newContext(target, SNMPManager.getMib(), config, null);
 
@@ -30,7 +31,11 @@ class SNMPRecord {
         this.parent = parent;
     }
 
-    void retrieve(List<String> oids) {
+    void retrieve(List<String> oids, boolean isSubnet) {
+        if(!isSubnet && Controller.getLogLevel() != LogLevel.NONE) {
+            Controller.getLogger().logImmediately("Sent request! (" + ip + " - " + community + " - " + oids + ")");
+        }
+
         context.asyncGetNext(event -> {
             try {
                 VarbindCollection received = event.getResponse().get();
@@ -46,9 +51,14 @@ class SNMPRecord {
                     parent.addSelfToList();
                 });
             } catch (TimeoutException ex) {
-                Controller.log("Request timed out! (" + ip + " - " + community + " - " + oids.toString() + ")");
+                if(Controller.getLogLevel() == LogLevel.FULL
+                || (Controller.getLogLevel() == LogLevel.SOME && !isSubnet)) {
+                    Controller.getLogger().logBuffered("Request timed out! (" + ip + " - " + community + " - " + oids.toString() + ")");
+                }
             } catch (SnmpException ex) {
-                Controller.log("An SNMP-Exception occurred, please restart the application");
+                if(Controller.getLogLevel() != LogLevel.NONE) {
+                    Controller.getLogger().logImmediately("An SNMP-Exception occurred, please restart the application");
+                }
             } catch (Exception ex) {
                 System.out.println("Unexpected Exception: ");
                 ex.printStackTrace();

@@ -4,6 +4,8 @@ import com.mitmax.backend.SNMPManager;
 import com.mitmax.backend.SNMPTarget;
 import com.mitmax.backend.Settings;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
@@ -32,11 +34,15 @@ public class Controller {
     public EditableListView lsv_initialRequests;
     public EditableListView lsv_mibModules;
     public TextField txt_mask;
+    public TextField txt_timeout;
+    public ToggleGroup tgg_logLevel;
 
     private static ListView<SNMPTarget> staticLsv_records;
+    private static TextField staticTxt_timeout;
 
     private TableView<Varbind> tbv_varbinds;
     private static Logger logger;
+    private static LogLevel logLevel;
 
     @FXML
     public void initialize() {
@@ -117,8 +123,22 @@ public class Controller {
         lsv_mibModules.setTitleText("MIB Modules");
 
         staticLsv_records = lsv_records;
+        staticTxt_timeout = txt_timeout;
 
         logger = new Logger(txa_log);
+
+        txt_timeout.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(!newValue.matches("[1-9][0-9]{0,5}")) {
+                txt_timeout.setText(oldValue);
+            }
+        });
+
+        logLevel = LogLevel.SOME;
+        tgg_logLevel.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            logLevel = LogLevel.values()[tgg_logLevel.getToggles().indexOf(newValue)];
+            txa_log.setVisible(logLevel != LogLevel.NONE);
+            txa_log.setManaged(logLevel != LogLevel.NONE);
+        });
     }
 
     private void onBtn_scan(ActionEvent event) {
@@ -133,7 +153,7 @@ public class Controller {
 
         switch (cbx_mode.getSelectionModel().getSelectedItem()) {
             case "Host":
-                SNMPManager.scanAddress(address, community);
+                SNMPManager.scanAddress(address, community, false);
                 break;
             case "Subnet":
                 try {
@@ -166,11 +186,19 @@ public class Controller {
         tbv_varbinds.setItems(selectedRecord.getVarbinds(selectedTab.getText()));
     }
 
-    public static void log(String message) {
-        logger.log(message);
+    public static Logger getLogger() {
+        return logger;
+    }
+
+    public static LogLevel getLogLevel() {
+        return logLevel;
     }
 
     public static void refreshListView() {
         staticLsv_records.refresh();
+    }
+
+    public static int getTimeout() {
+        return Integer.parseInt(staticTxt_timeout.getText());
     }
 }

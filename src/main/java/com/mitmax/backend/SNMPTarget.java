@@ -23,8 +23,8 @@ public class SNMPTarget {
         }
     }
 
-    void retrieve(String community, List<String> oids) {
-        records.get(community).retrieve(oids);
+    void retrieve(String community, List<String> oids, boolean isSubnet) {
+        records.get(community).retrieve(oids, isSubnet);
     }
 
     void close() {

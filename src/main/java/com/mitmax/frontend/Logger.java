@@ -24,8 +24,12 @@ public class Logger {
         }, 0, 2000);
     }
 
-    synchronized void log(String message) {
+    public synchronized void logBuffered(String message) {
         messageBuffer.add(message);
+    }
+
+    public void logImmediately(String message) {
+        Platform.runLater(() -> outputArea.appendText(message + "\n"));
     }
 
     private synchronized void onOutput() {
@@ -45,4 +49,5 @@ public class Logger {
 
         messageBuffer.clear();
     }
+
 }

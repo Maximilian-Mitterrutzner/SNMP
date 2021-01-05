@@ -1,5 +1,7 @@
 package com.mitmax.backend;
 
+import com.mitmax.frontend.Controller;
+import com.mitmax.frontend.LogLevel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -25,7 +27,7 @@ public class SNMPManager {
         }
     }
 
-    public static void scanAddress(String ip, String community) {
+    public static void scanAddress(String ip, String community, boolean isSubnet) {
         new Thread(() -> {
             SNMPTarget target = snmpTargets.get(ip);
 
@@ -33,12 +35,16 @@ public class SNMPManager {
                 target = new SNMPTarget(ip);
             }
 
-            target.retrieve(community, Settings.initialRequests);
+            target.retrieve(community, Settings.initialRequests, isSubnet);
         }).start();
     }
 
     public static void scanSubnet(String ip, String community, int mask) {
         Thread scanThread = new Thread(() -> {
+            if(Controller.getLogLevel() != LogLevel.NONE) {
+                Controller.getLogger().logImmediately("Started subnet scan!");
+            }
+
             int wildcard = 32 - mask;
             long binaryWildcard = (long) (Math.pow(2, wildcard) - 1);
             long netId = (AddressHelper.getAsBinary(ip) >> wildcard) << wildcard;
@@ -46,7 +52,11 @@ public class SNMPManager {
 
             long currentAddress = netId;
             while(++currentAddress != broadcast) {
-                scanAddress(AddressHelper.getAsString(currentAddress), community);
+                scanAddress(AddressHelper.getAsString(currentAddress), community, true);
+            }
+
+            if(Controller.getLogLevel() != LogLevel.NONE) {
+                Controller.getLogger().logImmediately("Finished subnet scan!");
             }
         });
         scanThread.setPriority(Thread.MIN_PRIORITY);
