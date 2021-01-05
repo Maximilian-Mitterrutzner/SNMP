@@ -64,6 +64,21 @@ public class SNMPManager {
         scanThread.start();
     }
 
+    public static void scanRange(long address, long end, String community) {
+        if(Controller.getLogLevel() != LogLevel.NONE) {
+            Controller.getLogger().logImmediately("Started range scan!");
+        }
+
+        while(address <= end) {
+            scanAddress(AddressHelper.getAsString(address), community, Settings.initialRequests, true);
+            address++;
+        }
+
+        if(Controller.getLogLevel() != LogLevel.NONE) {
+            Controller.getLogger().logImmediately("Finished range scan!");
+        }
+    }
+
     public static void closeAll() {
         for(SNMPTarget target : snmpTargets.values()) {
             target.close();

@@ -1,5 +1,6 @@
 package com.mitmax.frontend;
 
+import com.mitmax.backend.AddressHelper;
 import com.mitmax.backend.SNMPManager;
 import com.mitmax.backend.SNMPTarget;
 import com.mitmax.backend.Settings;
@@ -23,6 +24,8 @@ public class Controller {
     public ComboBox<String> cbx_scanCommunity;
     public ComboBox<String> cbx_requestCommunity;
     public HBox hbx_subnetItems;
+    public HBox hbx_rangeItems;
+    public TextField txt_endIP;
     public Button btn_scan;
     public TextField txt_oid;
     public ListView<SNMPTarget> lsv_records;
@@ -46,11 +49,12 @@ public class Controller {
 
     @FXML
     public void initialize() {
-        cbx_mode.setItems(FXCollections.observableArrayList("Host", "Subnet"));
-        cbx_mode.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
-            boolean isShown = newValue.intValue() == 1;
-            hbx_subnetItems.setVisible(isShown);
-            hbx_subnetItems.setManaged(isShown);
+        cbx_mode.setItems(FXCollections.observableArrayList("Host", "Subnet", "Range"));
+        cbx_mode.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            hbx_subnetItems.setVisible(newValue.equals("Subnet"));
+            hbx_subnetItems.setManaged(newValue.equals("Subnet"));
+            hbx_rangeItems.setVisible(newValue.equals("Range"));
+            hbx_rangeItems.setManaged(newValue.equals("Range"));
         });
         cbx_mode.getSelectionModel().select(0);
 
@@ -166,6 +170,18 @@ public class Controller {
                 catch (NumberFormatException ex) {
                     //TODO set text color to red
                 }
+                break;
+            case "Range":
+                String endIp = txt_endIP.getText();
+                long startAddress = AddressHelper.getAsBinary(address);
+                long endAddress = AddressHelper.getAsBinary(endIp);
+                if(!isAddressValid(endIp)
+                || endAddress < startAddress) {
+                    //TODO set text color to red
+                    return;
+                }
+
+                SNMPManager.scanRange(startAddress, endAddress, community);
                 break;
         }
     }

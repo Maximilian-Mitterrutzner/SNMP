@@ -31,6 +31,17 @@
                         </Label>
                         <TextField promptText="24" fx:id="txt_mask"/>
                     </HBox>
+                    <HBox fx:id="hbx_rangeItems" spacing="10">
+                        <Label text="-">
+                            <padding>
+                                <Insets top="-4" bottom="-4"/>
+                            </padding>
+                            <font>
+                                <Font size="20"/>
+                            </font>
+                        </Label>
+                        <TextField fx:id="txt_endIP" promptText="192.168.1.255"/>
+                    </HBox>
                     <ComboBox fx:id="cbx_scanCommunity"/>
                     <Button fx:id="btn_scan" text="Scan"/>
                 </HBox>

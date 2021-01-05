@@ -3,7 +3,7 @@ package com.mitmax.backend;
 public class AddressHelper {
     private static final int BLOCK_COUNT = 4;
 
-    static long getAsBinary(String address) {
+    public static long getAsBinary(String address) {
         long binary = 0;
 
         String[] parts = address.split("\\.");
@@ -14,7 +14,7 @@ public class AddressHelper {
         return binary;
     }
 
-    static String getAsString(long binary) {
+    public static String getAsString(long binary) {
         StringBuilder builder = new StringBuilder();
 
         for(int i = 0; i < BLOCK_COUNT; i++) {
