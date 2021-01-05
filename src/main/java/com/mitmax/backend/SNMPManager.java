@@ -9,6 +9,7 @@ import org.soulwing.snmp.Mib;
 import org.soulwing.snmp.MibFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public class SNMPManager {
     private static final ObservableMap<String, SNMPTarget> snmpTargets;
@@ -27,7 +28,7 @@ public class SNMPManager {
         }
     }
 
-    public static void scanAddress(String ip, String community, boolean isSubnet) {
+    public static void scanAddress(String ip, String community, List<String> oids, boolean isSubnet) {
         new Thread(() -> {
             SNMPTarget target = snmpTargets.get(ip);
 
@@ -35,7 +36,7 @@ public class SNMPManager {
                 target = new SNMPTarget(ip);
             }
 
-            target.retrieve(community, Settings.initialRequests, isSubnet);
+            target.retrieve(community, oids, isSubnet);
         }).start();
     }
 
@@ -52,7 +53,7 @@ public class SNMPManager {
 
             long currentAddress = netId;
             while(++currentAddress != broadcast) {
-                scanAddress(AddressHelper.getAsString(currentAddress), community, true);
+                scanAddress(AddressHelper.getAsString(currentAddress), community, Settings.initialRequests, true);
             }
 
             if(Controller.getLogLevel() != LogLevel.NONE) {

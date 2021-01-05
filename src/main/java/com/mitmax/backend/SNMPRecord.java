@@ -36,34 +36,41 @@ class SNMPRecord {
             Controller.getLogger().logImmediately("Sent request! (" + ip + " - " + community + " - " + oids + ")");
         }
 
-        context.asyncGetNext(event -> {
-            try {
-                VarbindCollection received = event.getResponse().get();
-                Platform.runLater(() -> {
-                    for(Varbind varbind : received) {
-                        if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
-                            parent.setHostName(varbind.asString() + " (" + ip + ")");
-                            Controller.refreshListView();
-                            break;
+        try {
+            context.asyncGetNext(event -> {
+                try {
+                    VarbindCollection received = event.getResponse().get();
+                    Platform.runLater(() -> {
+                        for(Varbind varbind : received) {
+                            if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
+                                parent.setHostName(varbind.asString() + " (" + ip + ")");
+                                Controller.refreshListView();
+                                break;
+                            }
                         }
+                        varbinds.addAll(received.asList());
+                        parent.addSelfToList();
+                    });
+                } catch (TimeoutException ex) {
+                    if(Controller.getLogLevel() == LogLevel.FULL
+                            || (Controller.getLogLevel() == LogLevel.SOME && !isSubnet)) {
+                        Controller.getLogger().logBuffered("Request timed out! (" + ip + " - " + community + " - " + oids.toString() + ")");
                     }
-                    varbinds.addAll(received.asList());
-                    parent.addSelfToList();
-                });
-            } catch (TimeoutException ex) {
-                if(Controller.getLogLevel() == LogLevel.FULL
-                || (Controller.getLogLevel() == LogLevel.SOME && !isSubnet)) {
-                    Controller.getLogger().logBuffered("Request timed out! (" + ip + " - " + community + " - " + oids.toString() + ")");
+                } catch (SnmpException ex) {
+                    if(Controller.getLogLevel() != LogLevel.NONE) {
+                        Controller.getLogger().logImmediately("An SNMP-Exception occurred, please restart the application");
+                    }
+                } catch (Exception ex) {
+                    System.out.println("Unexpected Exception: ");
+                    ex.printStackTrace();
                 }
-            } catch (SnmpException ex) {
-                if(Controller.getLogLevel() != LogLevel.NONE) {
-                    Controller.getLogger().logImmediately("An SNMP-Exception occurred, please restart the application");
-                }
-            } catch (Exception ex) {
-                System.out.println("Unexpected Exception: ");
-                ex.printStackTrace();
+            }, oids);
+        } catch (IllegalArgumentException ex) {
+            if(Controller.getLogLevel() != LogLevel.NONE) {
+                Controller.getLogger().logImmediately("OID " + ex.getMessage());
             }
-        }, oids);
+        }
+
     }
 
     void close() {

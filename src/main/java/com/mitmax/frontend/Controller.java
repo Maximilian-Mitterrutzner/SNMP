@@ -4,8 +4,6 @@ import com.mitmax.backend.SNMPManager;
 import com.mitmax.backend.SNMPTarget;
 import com.mitmax.backend.Settings;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
@@ -17,6 +15,7 @@ import org.soulwing.snmp.Varbind;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
 
 public class Controller {
     public ComboBox<String> cbx_mode;
@@ -28,6 +27,7 @@ public class Controller {
     public TextField txt_oid;
     public ListView<SNMPTarget> lsv_records;
     public TextField txt_requestIp;
+    public Button btn_request;
     public TabPane tbp_communities;
     public TextArea txa_log;
     public EditableListView lsv_communities;
@@ -111,6 +111,8 @@ public class Controller {
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         tbp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
+        btn_request.setOnAction(this::onBtn_request);
+
         lsv_communities.setBackingList(Settings.communities);
         lsv_communities.setNewText("Community");
         lsv_communities.setTitleText("Communities");
@@ -144,16 +146,14 @@ public class Controller {
     private void onBtn_scan(ActionEvent event) {
         String community = cbx_scanCommunity.getSelectionModel().getSelectedItem();
         String address = txt_scanIp.getText();
-        try {
-            InetAddress.getByName(address);
-        } catch (UnknownHostException ex) {
+        if(!isAddressValid(address)) {
             //TODO set text color to red
             return;
         }
 
         switch (cbx_mode.getSelectionModel().getSelectedItem()) {
             case "Host":
-                SNMPManager.scanAddress(address, community, false);
+                SNMPManager.scanAddress(address, community, Settings.initialRequests, false);
                 break;
             case "Subnet":
                 try {
@@ -167,6 +167,28 @@ public class Controller {
                     //TODO set text color to red
                 }
                 break;
+        }
+    }
+
+    private void onBtn_request(ActionEvent event) {
+        String community = cbx_requestCommunity.getSelectionModel().getSelectedItem();
+        String oid = txt_oid.getText();
+        String address = txt_requestIp.getText();
+
+        if(!isAddressValid(address)) {
+            //TODO set text color to red
+            return;
+        }
+
+        SNMPManager.scanAddress(address, community, Collections.singletonList(oid), false);
+    }
+
+    private boolean isAddressValid(String address) {
+        try {
+            InetAddress.getByName(address);
+            return true;
+        } catch (UnknownHostException ex) {
+            return false;
         }
     }
 
