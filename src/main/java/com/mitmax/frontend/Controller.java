@@ -7,6 +7,8 @@ import com.mitmax.backend.Settings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -66,6 +68,8 @@ public class Controller {
 
         btn_scan.setOnAction(this::onBtn_scan);
 
+        ObservableList<SNMPTarget> backingRecordsList = FXCollections.observableArrayList();
+        lsv_records.setItems(new SortedList<>(backingRecordsList, SNMPTarget::compareTo));
         lsv_records.setCellFactory(listView -> new ListCell<SNMPTarget>() {
             @Override
             protected void updateItem(SNMPTarget item, boolean empty) {
@@ -86,10 +90,10 @@ public class Controller {
         });
         SNMPManager.getSnmpTargets().addListener((MapChangeListener<String, SNMPTarget>) change -> {
             if(change.wasRemoved()) {
-                lsv_records.getItems().remove(change.getValueRemoved());
+                backingRecordsList.remove(change.getValueRemoved());
             }
             if(change.wasAdded()) {
-                lsv_records.getItems().add(change.getValueAdded());
+                backingRecordsList.add(change.getValueAdded());
             }
         });
         tbv_varbinds = new TableView<>();
@@ -222,6 +226,8 @@ public class Controller {
             return;
         }
         tbv_varbinds.setItems(selectedRecord.getVarbinds(selectedTab.getText()));
+        tbv_varbinds.getSortOrder().add(tbv_varbinds.getColumns().get(0));
+        tbv_varbinds.sort();
     }
 
     public static Logger getLogger() {

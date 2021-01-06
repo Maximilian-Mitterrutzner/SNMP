@@ -6,14 +6,16 @@ import org.soulwing.snmp.Varbind;
 import java.util.HashMap;
 import java.util.List;
 
-public class SNMPTarget {
+public class SNMPTarget  implements Comparable<SNMPTarget> {
     private final String ip;
+    private final long ipBinary;
     private final HashMap<String, SNMPRecord> records;
     private String hostName;
     private boolean isAdded;
 
     SNMPTarget(String ip) {
         this.ip = ip;
+        this.ipBinary = AddressHelper.getAsBinary(ip);
         records = new HashMap<>(Settings.communities.size());
         hostName = ip;
         isAdded = false;
@@ -54,5 +56,10 @@ public class SNMPTarget {
 
     void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    @Override
+    public int compareTo(SNMPTarget o) {
+        return Long.compare(this.ipBinary, o.ipBinary);
     }
 }
