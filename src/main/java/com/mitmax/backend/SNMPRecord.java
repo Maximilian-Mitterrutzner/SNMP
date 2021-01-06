@@ -4,14 +4,18 @@ import com.mitmax.frontend.Controller;
 import com.mitmax.frontend.LogLevel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import org.soulwing.snmp.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 class SNMPRecord {
     private final SnmpContext context;
-    private final ObservableList<Varbind> varbinds;
+    private final ObservableMap<String, Varbind> varbindsMap;
+    private final ObservableList<Varbind> varbindsList;
     private final String ip;
     private final String community;
     private final SNMPTarget parent;
@@ -25,7 +29,16 @@ class SNMPRecord {
         config.setRetries(1);
         context = SnmpFactory.getInstance().newContext(target, SNMPManager.getMib(), config, null);
 
-        varbinds = FXCollections.observableArrayList();
+        varbindsMap = FXCollections.observableMap(new HashMap<>());
+        varbindsList = FXCollections.observableArrayList();
+        varbindsMap.addListener((MapChangeListener<String, Varbind>) change -> {
+            if(change.wasRemoved()) {
+                varbindsList.remove(change.getValueRemoved());
+            }
+            if(change.wasAdded()) {
+                varbindsList.add(change.getValueAdded());
+            }
+        });
         this.ip = ip;
         this.community = community;
         this.parent = parent;
@@ -45,10 +58,13 @@ class SNMPRecord {
                             if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
                                 parent.setHostName(varbind.asString() + " (" + ip + ")");
                                 Controller.refreshListView();
-                                break;
+                            }
+
+                            synchronized (varbindsMap) {
+                                varbindsMap.put(varbind.getOid(), varbind);
                             }
                         }
-                        varbinds.addAll(received.asList());
+
                         parent.addSelfToList();
                     });
                 } catch (TimeoutException ex) {
@@ -78,6 +94,6 @@ class SNMPRecord {
     }
 
     ObservableList<Varbind> getVarbinds() {
-        return varbinds;
+        return varbindsList;
     }
 }

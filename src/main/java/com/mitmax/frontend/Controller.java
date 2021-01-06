@@ -6,6 +6,7 @@ import com.mitmax.backend.SNMPTarget;
 import com.mitmax.backend.Settings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -19,6 +20,7 @@ import org.soulwing.snmp.Varbind;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Controller {
     public ComboBox<String> cbx_mode;
@@ -225,7 +227,17 @@ public class Controller {
             tbv_varbinds.setItems(null);
             return;
         }
-        tbv_varbinds.setItems(selectedRecord.getVarbinds(selectedTab.getText()));
+
+        ObservableList<Varbind> varbinds = selectedRecord.getVarbinds(selectedTab.getText());
+        AtomicBoolean isSorting = new AtomicBoolean(false);
+        varbinds.addListener((ListChangeListener<Varbind>) c -> {
+            if(!isSorting.get()) {
+                isSorting.set(true);
+                tbv_varbinds.sort();
+                isSorting.set(false);
+            }
+        });
+        tbv_varbinds.setItems(varbinds);
         tbv_varbinds.getSortOrder().add(tbv_varbinds.getColumns().get(0));
         tbv_varbinds.sort();
     }
