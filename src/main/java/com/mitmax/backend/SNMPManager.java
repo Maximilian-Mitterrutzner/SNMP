@@ -7,6 +7,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import org.soulwing.snmp.Mib;
 import org.soulwing.snmp.MibFactory;
+import org.soulwing.snmp.SnmpFactory;
+import org.soulwing.snmp.SnmpListener;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.List;
 public class SNMPManager {
     private static final ObservableMap<String, SNMPTarget> snmpTargets;
     private static final Mib mib;
+    private static SnmpListener listener;
 
     static {
         snmpTargets = FXCollections.observableHashMap();
@@ -83,6 +86,8 @@ public class SNMPManager {
         for(SNMPTarget target : snmpTargets.values()) {
             target.close();
         }
+
+        listener.close();
     }
 
     public static ObservableMap<String, SNMPTarget> getSnmpTargets() {
@@ -95,5 +100,13 @@ public class SNMPManager {
 
     static void addTarget(SNMPTarget target) {
         snmpTargets.put(target.getIp(), target);
+    }
+
+    public static void registerTrapListener() {
+        listener = SnmpFactory.getInstance().newListener(162, SNMPManager.getMib());
+        listener.addHandler(event -> {
+            Controller.addNotification(event.getSubject());
+            return true;
+        });
     }
 }

@@ -1,9 +1,7 @@
 package com.mitmax.frontend;
 
-import com.mitmax.backend.AddressHelper;
-import com.mitmax.backend.SNMPManager;
-import com.mitmax.backend.SNMPTarget;
-import com.mitmax.backend.Settings;
+import com.mitmax.backend.*;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -13,9 +11,10 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
-import org.soulwing.snmp.Varbind;
+import org.soulwing.snmp.*;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -23,6 +22,7 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Controller {
+    public TabPane tbp_mode;
     public ComboBox<String> cbx_mode;
     public TextField txt_scanIp;
     public ComboBox<String> cbx_scanCommunity;
@@ -35,7 +35,7 @@ public class Controller {
     public ListView<SNMPTarget> lsv_records;
     public TextField txt_requestIp;
     public Button btn_request;
-    public TabPane tbp_communities;
+    public ModeTabPane<TableView<Varbind>> mtp_communities;
     public TextArea txa_log;
     public EditableListView lsv_communities;
     public EditableListView lsv_initialRequests;
@@ -43,16 +43,39 @@ public class Controller {
     public TextField txt_mask;
     public TextField txt_timeout;
     public ToggleGroup tgg_logLevel;
+    public ModeTabPane<ListView<SnmpNotification>> mtp_trapTypes;
+    public BorderPane brp_container;
 
     private static ListView<SNMPTarget> staticLsv_records;
     private static TextField staticTxt_timeout;
 
     private TableView<Varbind> tbv_varbinds;
+    private ListView<SnmpNotification> lsv_traps;
     private static Logger logger;
     private static LogLevel logLevel;
+    private static ObservableList<SnmpNotification> trapsList;
+    private static ObservableList<SnmpNotification> informsList;
 
     @FXML
     public void initialize() {
+        //TabPane
+        tbv_varbinds = new TableView<>();
+        tbp_mode.getSelectionModel().selectedItemProperty().addListener((observable, oldTab, newTab) -> {
+            tbv_varbinds.setItems(null);
+
+            if(newTab.getText().equals("Scanner")) {
+                brp_container.setCenter(null);
+                mtp_communities.setContent(tbv_varbinds);
+                lsv_records.getSelectionModel().clearSelection();
+            }
+            else {
+                mtp_communities.setContent(null);
+                brp_container.setCenter(tbv_varbinds);
+                lsv_traps.getSelectionModel().clearSelection();
+            }
+        });
+
+        //Scanner
         cbx_mode.setItems(FXCollections.observableArrayList("Host", "Subnet", "Range"));
         cbx_mode.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             hbx_subnetItems.setVisible(newValue.equals("Subnet"));
@@ -72,22 +95,10 @@ public class Controller {
 
         ObservableList<SNMPTarget> backingRecordsList = FXCollections.observableArrayList();
         lsv_records.setItems(new SortedList<>(backingRecordsList, SNMPTarget::compareTo));
-        lsv_records.setCellFactory(listView -> new ListCell<SNMPTarget>() {
-            @Override
-            protected void updateItem(SNMPTarget item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    setText(item.getHostName());
-                }
-            }
-        });
+        lsv_records.setCellFactory(new SimpleListCellFactory<>(SNMPTarget::getHostName));
         lsv_records.getSelectionModel().selectedItemProperty().addListener((observable, oldRecord, newRecord) -> {
-            if(!tbp_communities.getSelectionModel().isEmpty()) {
-                onSelectionChanged(tbp_communities.getSelectionModel().getSelectedItem(), newRecord);
+            if(!mtp_communities.getSelectionModel().isEmpty()) {
+                onSelectionChanged(mtp_communities.getSelectionModel().getSelectedItem(), newRecord);
             }
         });
         SNMPManager.getSnmpTargets().addListener((MapChangeListener<String, SNMPTarget>) change -> {
@@ -98,31 +109,54 @@ public class Controller {
                 backingRecordsList.add(change.getValueAdded());
             }
         });
-        tbv_varbinds = new TableView<>();
         addColumn("OID", 0.2, Varbind::getOid);
         addColumn("Name", 0.2, Varbind::getName);
         addColumn("Value", 0.6, Varbind::asString);
 
-        tbp_communities.getSelectionModel().selectedItemProperty().addListener((observable, oldTab, newTab) -> {
-            if(oldTab != null) {
-                oldTab.setContent(null);
-            }
-            if(newTab != null) {
-                newTab.setContent(tbv_varbinds);
-                if(!lsv_records.getSelectionModel().isEmpty()) {
-                    onSelectionChanged(newTab, lsv_records.getSelectionModel().getSelectedItem());
-                }
+        mtp_communities.setContent(tbv_varbinds);
+        mtp_communities.setOnTabSelected((observable, oldTab, newTab) -> {
+            if(!lsv_records.getSelectionModel().isEmpty()) {
+                onSelectionChanged(newTab, lsv_records.getSelectionModel().getSelectedItem());
             }
         });
         for(String community : Settings.communities) {
-            tbp_communities.getTabs().add(new Tab(community));
+            mtp_communities.getTabs().add(new Tab(community));
         }
 
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
-        tbp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
+        mtp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         btn_request.setOnAction(this::onBtn_request);
 
+        //Traps
+        lsv_traps = new ListView<>();
+        trapsList = FXCollections.observableArrayList();
+        informsList = FXCollections.observableArrayList();
+
+        mtp_trapTypes.setContent(lsv_traps);
+        mtp_trapTypes.setOnTabSelected((observable, oldTab, newTab) -> {
+            lsv_traps.setItems(newTab.getText().equals("Traps") ? trapsList : informsList);
+        });
+        mtp_trapTypes.getTabs().add(new Tab("Traps"));
+        mtp_trapTypes.getTabs().add(new Tab("Informs"));
+
+        lsv_traps.setCellFactory(new SimpleListCellFactory<>(item -> item.getPeer().getAddress()));
+        lsv_traps.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue == null) {
+                tbv_varbinds.setItems(null);
+                return;
+            }
+
+            tbv_varbinds.setItems(FXCollections.observableArrayList(newValue.getVarbinds().asList()));
+            tbv_varbinds.getSortOrder().add(tbv_varbinds.getColumns().get(0));
+            tbv_varbinds.sort();
+        });
+
+        mtp_trapTypes.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+        SNMPManager.registerTrapListener();
+
+        //Settings
         lsv_communities.setBackingList(Settings.communities);
         lsv_communities.setNewText("Community");
         lsv_communities.setTitleText("Communities");
@@ -256,5 +290,16 @@ public class Controller {
 
     public static int getTimeout() {
         return Integer.parseInt(staticTxt_timeout.getText());
+    }
+
+    public static void addNotification(SnmpNotification notification) {
+        Platform.runLater(() -> {
+            if(notification.getType().equals(SnmpNotification.Type.TRAP)) {
+                trapsList.add(notification);
+            }
+            else {
+                informsList.add(notification);
+            }
+        });
     }
 }

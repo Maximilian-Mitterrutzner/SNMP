@@ -6,12 +6,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Font?>
 <?import com.mitmax.frontend.EditableListView?>
+<?import com.mitmax.frontend.ModeTabPane?>
 <GridPane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
           fx:controller="com.mitmax.frontend.Controller"
           prefWidth="800"
           prefHeight="800">
-    <TabPane tabClosingPolicy="UNAVAILABLE">
+    <TabPane fx:id="tbp_mode" tabClosingPolicy="UNAVAILABLE">
         <Tab text="Scanner">
             <VBox spacing="10">
                 <padding>
@@ -47,14 +48,14 @@
                 </HBox>
                 <GridPane hgap="10">
                     <ListView fx:id="lsv_records" GridPane.columnIndex="0"/>
-                    <TabPane fx:id="tbp_communities"
-                             GridPane.columnIndex="1"
-                             tabClosingPolicy="UNAVAILABLE"
-                             styleClass="floating">
+                    <ModeTabPane fx:id="mtp_communities"
+                                 GridPane.columnIndex="1"
+                                 tabClosingPolicy="UNAVAILABLE"
+                                 styleClass="floating">
                         <padding>
                             <Insets top="-5"/>
                         </padding>
-                    </TabPane>
+                    </ModeTabPane>
                     <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" percentWidth="30.0"/>
                         <ColumnConstraints hgrow="SOMETIMES" percentWidth="70.0"/>
@@ -71,6 +72,22 @@
                 </GridPane>
                 <TextArea fx:id="txa_log" minHeight="150" editable="false"/>
             </VBox>
+        </Tab>
+        <Tab text="Traps">
+            <GridPane hgap="10">
+                <ModeTabPane fx:id="mtp_trapTypes"
+                             GridPane.columnIndex="0"
+                             tabClosingPolicy="UNAVAILABLE"
+                             styleClass="floating"/>
+                <BorderPane fx:id="brp_container" GridPane.columnIndex="1"/>
+                <columnConstraints>
+                    <ColumnConstraints hgrow="SOMETIMES" percentWidth="30.0"/>
+                    <ColumnConstraints hgrow="SOMETIMES" percentWidth="70.0"/>
+                </columnConstraints>
+                <padding>
+                    <Insets topRightBottomLeft="10"/>
+                </padding>
+            </GridPane>
         </Tab>
         <Tab text="Settings">
             <VBox>
