@@ -13,9 +13,9 @@ public class SNMPTarget  implements Comparable<SNMPTarget> {
     private String hostName;
     private boolean isAdded;
 
-    SNMPTarget(String ip) {
+    SNMPTarget(String ip, long ipBinary) {
         this.ip = ip;
-        this.ipBinary = AddressHelper.getAsBinary(ip);
+        this.ipBinary = ipBinary;
         records = new HashMap<>(Settings.communities.size());
         hostName = ip;
         isAdded = false;

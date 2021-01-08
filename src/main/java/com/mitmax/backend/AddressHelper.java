@@ -7,8 +7,19 @@ public class AddressHelper {
         long binary = 0;
 
         String[] parts = address.split("\\.");
+
+        if(parts.length != BLOCK_COUNT) {
+            throw new IllegalArgumentException("Incorrect IPv4 format");
+        }
+
         for(int i = 0; i < BLOCK_COUNT; i++) {
-            binary |= Long.parseLong(parts[i]) << (8 * (parts.length - i - 1));
+            long block = Long.parseLong(parts[i]);
+
+            if(block < 0 || block > 255) {
+                throw new IllegalArgumentException("Incorrect IPv4 format");
+            }
+
+            binary |= block << (8 * (parts.length - i - 1));
         }
 
         return binary;

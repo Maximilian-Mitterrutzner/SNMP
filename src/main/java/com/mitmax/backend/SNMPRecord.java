@@ -74,7 +74,7 @@ class SNMPRecord {
                     }
                 } catch (SnmpException ex) {
                     if(Controller.getLogLevel() != LogLevel.NONE) {
-                        Controller.getLogger().logImmediately("An SNMP-Exception occurred, please restart the application");
+                        Controller.getLogger().logImmediately(ex.getMessage().split(": ")[2]);
                     }
                 } catch (Exception ex) {
                     System.out.println("Unexpected Exception: ");

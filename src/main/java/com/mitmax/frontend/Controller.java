@@ -16,8 +16,6 @@ import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import org.soulwing.snmp.*;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -126,6 +124,12 @@ public class Controller {
         lsv_records.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         mtp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
+        txt_scanIp.textProperty().addListener((observable, oldValue, newValue) -> txt_scanIp.setStyle(null));
+        txt_mask.textProperty().addListener((observable, oldValue, newValue) -> txt_mask.setStyle(null));
+        txt_endIP.textProperty().addListener((observable, oldValue, newValue) -> txt_endIP.setStyle(null));
+        txt_requestIp.textProperty().addListener((observable, oldValue, newValue) -> txt_requestIp.setStyle(null));
+        txt_oid.textProperty().addListener((observable, oldValue, newValue) -> txt_oid.setStyle(null));
+
         btn_request.setOnAction(this::onBtn_request);
 
         //Traps
@@ -190,38 +194,49 @@ public class Controller {
     private void onBtn_scan(ActionEvent event) {
         String community = cbx_scanCommunity.getSelectionModel().getSelectedItem();
         String address = txt_scanIp.getText();
-        if(!isAddressValid(address)) {
-            //TODO set text color to red
+        long addressBinary;
+
+        try {
+            addressBinary = AddressHelper.getAsBinary(address);
+        } catch (Exception ex) {
+            txt_scanIp.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
             return;
         }
 
         switch (cbx_mode.getSelectionModel().getSelectedItem()) {
             case "Host":
-                SNMPManager.scanAddress(address, community, Settings.initialRequests, false);
+                SNMPManager.scanAddress(address, addressBinary, community, Settings.initialRequests, false);
                 break;
             case "Subnet":
+                int mask;
                 try {
-                    int mask = Integer.parseInt(txt_mask.getText());
+                    mask = Integer.parseInt(txt_mask.getText());
                     if(mask < 1 || mask > 32) {
                         throw new NumberFormatException();
                     }
-                    SNMPManager.scanSubnet(address, community, mask);
                 }
-                catch (NumberFormatException ex) {
-                    //TODO set text color to red
-                }
-                break;
-            case "Range":
-                String endIp = txt_endIP.getText();
-                long startAddress = AddressHelper.getAsBinary(address);
-                long endAddress = AddressHelper.getAsBinary(endIp);
-                if(!isAddressValid(endIp)
-                || endAddress < startAddress) {
-                    //TODO set text color to red
+                catch (Exception ex) {
+                    txt_mask.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
                     return;
                 }
 
-                SNMPManager.scanRange(startAddress, endAddress, community);
+                SNMPManager.scanSubnet(address, community, mask);
+                break;
+            case "Range":
+                String endIp = txt_endIP.getText();
+                long endAddress;
+                try {
+                    endAddress = AddressHelper.getAsBinary(endIp);
+
+                    if(endAddress < addressBinary) {
+                        throw new IllegalArgumentException();
+                    }
+                } catch (Exception ex) {
+                    txt_endIP.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
+                    return;
+                }
+
+                SNMPManager.scanRange(addressBinary, endAddress, community);
                 break;
         }
     }
@@ -230,22 +245,21 @@ public class Controller {
         String community = cbx_requestCommunity.getSelectionModel().getSelectedItem();
         String oid = txt_oid.getText();
         String address = txt_requestIp.getText();
+        long addressBinary;
 
-        if(!isAddressValid(address)) {
-            //TODO set text color to red
+        try {
+            addressBinary = AddressHelper.getAsBinary(address);
+        } catch (Exception ex) {
+            txt_requestIp.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
             return;
         }
 
-        SNMPManager.scanAddress(address, community, Collections.singletonList(oid), false);
-    }
-
-    private boolean isAddressValid(String address) {
-        try {
-            InetAddress.getByName(address);
-            return true;
-        } catch (UnknownHostException ex) {
-            return false;
+        if(oid.trim().isEmpty()) {
+            txt_oid.setStyle("-fx-text-box-border: red; -fx-focus-color: red;");
+            return;
         }
+
+        SNMPManager.scanAddress(address, addressBinary, community, Collections.singletonList(oid), false);
     }
 
     private void addColumn(String name, double size, Callback<Varbind, String> callback) {

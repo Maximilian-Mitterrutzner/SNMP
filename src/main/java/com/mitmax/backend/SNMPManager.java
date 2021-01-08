@@ -31,12 +31,12 @@ public class SNMPManager {
         }
     }
 
-    public static void scanAddress(String ip, String community, List<String> oids, boolean isSubnet) {
+    public static void scanAddress(String ip, long ipBinary, String community, List<String> oids, boolean isSubnet) {
         new Thread(() -> {
             SNMPTarget target = snmpTargets.get(ip);
 
             if(target == null) {
-                target = new SNMPTarget(ip);
+                target = new SNMPTarget(ip, ipBinary);
             }
 
             target.retrieve(community, oids, isSubnet);
@@ -56,7 +56,7 @@ public class SNMPManager {
 
             long currentAddress = netId;
             while(++currentAddress != broadcast) {
-                scanAddress(AddressHelper.getAsString(currentAddress), community, Settings.initialRequests, true);
+                scanAddress(AddressHelper.getAsString(currentAddress), currentAddress, community, Settings.initialRequests, true);
             }
 
             if(Controller.getLogLevel() != LogLevel.NONE) {
@@ -73,7 +73,7 @@ public class SNMPManager {
         }
 
         while(address <= end) {
-            scanAddress(AddressHelper.getAsString(address), community, Settings.initialRequests, true);
+            scanAddress(AddressHelper.getAsString(address), address, community, Settings.initialRequests, true);
             address++;
         }
 
