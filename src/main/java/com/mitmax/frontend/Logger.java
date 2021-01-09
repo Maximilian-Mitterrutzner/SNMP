@@ -19,7 +19,7 @@ public class Logger {
         outputTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                onOutput();
+                flush();
             }
         }, 0, 2000);
     }
@@ -29,10 +29,15 @@ public class Logger {
     }
 
     public void logImmediately(String message) {
-        Platform.runLater(() -> outputArea.appendText(message + "\n"));
+        if(Platform.isFxApplicationThread()) {
+            outputArea.appendText(message + "\n");
+        }
+        else {
+            Platform.runLater(() -> outputArea.appendText(message + "\n"));
+        }
     }
 
-    private synchronized void onOutput() {
+    public synchronized void flush() {
         int messageCount = messageBuffer.size();
         if(messageCount == 0) {
             return;

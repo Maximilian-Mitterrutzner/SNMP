@@ -12,14 +12,19 @@ import org.soulwing.snmp.SnmpListener;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SNMPManager {
     private static final ObservableMap<String, SNMPTarget> snmpTargets;
+    private static final ObservableMap<String, SNMPTarget> pendingSnmpTargets;
     private static final Mib mib;
+    private static final AtomicInteger pendingSnmpTargetsCount;
     private static SnmpListener listener;
+    private static Runnable onNoMorePendingTargets;
 
     static {
         snmpTargets = FXCollections.observableHashMap();
+        pendingSnmpTargets = FXCollections.observableHashMap();
         mib = MibFactory.getInstance().newMib();
         try {
             for(String module : Settings.mibModules) {
@@ -29,6 +34,9 @@ public class SNMPManager {
             ex.printStackTrace();
             Platform.exit();
         }
+
+        pendingSnmpTargetsCount = new AtomicInteger();
+        onNoMorePendingTargets = () -> {};
     }
 
     public static void scanAddress(String ip, long ipBinary, String community, List<String> oids, boolean isSubnet) {
@@ -36,7 +44,12 @@ public class SNMPManager {
             SNMPTarget target = snmpTargets.get(ip);
 
             if(target == null) {
-                target = new SNMPTarget(ip, ipBinary);
+                target = pendingSnmpTargets.get(ip);
+                if(target == null) {
+                    target = new SNMPTarget(ip, ipBinary);
+                    pendingSnmpTargets.put(ip, target);
+                    pendingSnmpTargetsCount.incrementAndGet();
+                }
             }
 
             target.retrieve(community, oids, isSubnet);
@@ -49,6 +62,13 @@ public class SNMPManager {
                 Controller.getLogger().logImmediately("Started subnet scan!");
             }
 
+            onNoMorePendingTargets = () -> {
+                if(Controller.getLogLevel() != LogLevel.NONE) {
+                    Controller.getLogger().logBuffered("Finished subnet scan!");
+                    Controller.getLogger().flush();
+                }
+            };
+
             int wildcard = 32 - mask;
             long binaryWildcard = (long) (Math.pow(2, wildcard) - 1);
             long netId = (AddressHelper.getAsBinary(ip) >> wildcard) << wildcard;
@@ -57,10 +77,6 @@ public class SNMPManager {
             long currentAddress = netId;
             while(++currentAddress != broadcast) {
                 scanAddress(AddressHelper.getAsString(currentAddress), currentAddress, community, Settings.initialRequests, true);
-            }
-
-            if(Controller.getLogLevel() != LogLevel.NONE) {
-                Controller.getLogger().logImmediately("Finished subnet scan!");
             }
         });
         scanThread.setPriority(Thread.MIN_PRIORITY);
@@ -72,13 +88,15 @@ public class SNMPManager {
             Controller.getLogger().logImmediately("Started range scan!");
         }
 
+        onNoMorePendingTargets = () -> {
+            if(Controller.getLogLevel() != LogLevel.NONE) {
+                Controller.getLogger().logImmediately("Finished range scan!");
+            }
+        };
+
         while(address <= end) {
             scanAddress(AddressHelper.getAsString(address), address, community, Settings.initialRequests, true);
             address++;
-        }
-
-        if(Controller.getLogLevel() != LogLevel.NONE) {
-            Controller.getLogger().logImmediately("Finished range scan!");
         }
     }
 
@@ -98,8 +116,17 @@ public class SNMPManager {
         return mib;
     }
 
-    static void addTarget(SNMPTarget target) {
-        snmpTargets.put(target.getIp(), target);
+    static void onRetrievalDone(SNMPTarget target, boolean successful) {
+        pendingSnmpTargets.remove(target.getIp());
+        pendingSnmpTargetsCount.decrementAndGet();
+
+        if(successful) {
+            Platform.runLater(() -> snmpTargets.put(target.getIp(), target));
+        }
+
+        if(pendingSnmpTargetsCount.get() == 0) {
+            onNoMorePendingTargets.run();
+        }
     }
 
     public static void registerTrapListener() {

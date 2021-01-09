@@ -299,7 +299,14 @@ public class Controller {
     }
 
     public static void refreshListView() {
-        staticLsv_records.refresh();
+        if(Platform.isFxApplicationThread()) {
+            staticLsv_records.refresh();
+        }
+        else {
+            Platform.runLater(() -> {
+                staticLsv_records.refresh();
+            });
+        }
     }
 
     public static int getTimeout() {

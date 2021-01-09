@@ -2,7 +2,6 @@ package com.mitmax.backend;
 
 import com.mitmax.frontend.Controller;
 import com.mitmax.frontend.LogLevel;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -11,6 +10,7 @@ import org.soulwing.snmp.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class SNMPRecord {
     private final SnmpContext context;
@@ -19,6 +19,7 @@ class SNMPRecord {
     private final String ip;
     private final String community;
     private final SNMPTarget parent;
+    private final AtomicInteger pendingRequests;
 
     SNMPRecord(String ip, String community, SNMPTarget parent) {
         SimpleSnmpV2cTarget target = new SimpleSnmpV2cTarget();
@@ -42,9 +43,12 @@ class SNMPRecord {
         this.ip = ip;
         this.community = community;
         this.parent = parent;
+        this.pendingRequests = new AtomicInteger();
     }
 
     void retrieve(List<String> oids, boolean isSubnet) {
+        pendingRequests.incrementAndGet();
+
         if(!isSubnet && Controller.getLogLevel() != LogLevel.NONE) {
             Controller.getLogger().logImmediately("Sent request! (" + ip + " - " + community + " - " + oids + ")");
         }
@@ -53,20 +57,19 @@ class SNMPRecord {
             context.asyncGetNext(event -> {
                 try {
                     VarbindCollection received = event.getResponse().get();
-                    Platform.runLater(() -> {
-                        for(Varbind varbind : received) {
-                            if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
-                                parent.setHostName(varbind.asString() + " (" + ip + ")");
-                                Controller.refreshListView();
-                            }
-
-                            synchronized (varbindsMap) {
-                                varbindsMap.put(varbind.getOid(), varbind);
-                            }
+                    for(Varbind varbind : received) {
+                        if(varbind.getOid().equals("1.3.6.1.2.1.1.5.0") || varbind.getName().equals("sysName.0")) {
+                            parent.setHostName(varbind.asString() + " (" + ip + ")");
+                            Controller.refreshListView();
                         }
 
-                        parent.addSelfToList();
-                    });
+                        synchronized (varbindsMap) {
+                            varbindsMap.put(varbind.getOid(), varbind);
+                        }
+                    }
+                    pendingRequests.decrementAndGet();
+                    parent.onRetrievalDone(true);
+                    return;
                 } catch (TimeoutException ex) {
                     if(Controller.getLogLevel() == LogLevel.FULL
                             || (Controller.getLogLevel() == LogLevel.SOME && !isSubnet)) {
@@ -80,13 +83,16 @@ class SNMPRecord {
                     System.out.println("Unexpected Exception: ");
                     ex.printStackTrace();
                 }
+                pendingRequests.decrementAndGet();
+                parent.onRetrievalDone(false);
             }, oids);
         } catch (IllegalArgumentException ex) {
             if(Controller.getLogLevel() != LogLevel.NONE) {
                 Controller.getLogger().logImmediately("OID " + ex.getMessage());
             }
+            pendingRequests.decrementAndGet();
+            parent.onRetrievalDone(false);
         }
-
     }
 
     void close() {
@@ -95,5 +101,9 @@ class SNMPRecord {
 
     ObservableList<Varbind> getVarbinds() {
         return varbindsList;
+    }
+
+    AtomicInteger getPendingRequests() {
+        return pendingRequests;
     }
 }

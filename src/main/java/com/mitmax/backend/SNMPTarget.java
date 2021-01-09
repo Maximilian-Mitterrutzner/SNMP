@@ -39,11 +39,22 @@ public class SNMPTarget  implements Comparable<SNMPTarget> {
         return records.get(community).getVarbinds();
     }
 
-    void addSelfToList() {
-        if(!isAdded) {
-            isAdded = true;
-            SNMPManager.addTarget(this);
+    synchronized void onRetrievalDone(boolean successful) {
+        if(isAdded) {
+            return;
         }
+
+        if(successful) {
+            isAdded = true;
+        }
+        else {
+            for(SNMPRecord record : records.values()) {
+                if(record.getPendingRequests().get() != 0) {
+                    return;
+                }
+            }
+        }
+        SNMPManager.onRetrievalDone(this, successful);
     }
 
     public String getIp() {
