@@ -58,12 +58,12 @@ public class SNMPManager {
 
     public static void scanSubnet(String ip, String community, int mask) {
         Thread scanThread = new Thread(() -> {
-            if(Controller.getLogLevel() != LogLevel.NONE) {
+            if(Settings.logLevel != LogLevel.NONE) {
                 Controller.getLogger().logImmediately("Started subnet scan!");
             }
 
             onNoMorePendingTargets = () -> {
-                if(Controller.getLogLevel() != LogLevel.NONE) {
+                if(Settings.logLevel != LogLevel.NONE) {
                     Controller.getLogger().logBuffered("Finished subnet scan!");
                     Controller.getLogger().flush();
                 }
@@ -84,12 +84,12 @@ public class SNMPManager {
     }
 
     public static void scanRange(long address, long end, String community) {
-        if(Controller.getLogLevel() != LogLevel.NONE) {
+        if(Settings.logLevel != LogLevel.NONE) {
             Controller.getLogger().logImmediately("Started range scan!");
         }
 
         onNoMorePendingTargets = () -> {
-            if(Controller.getLogLevel() != LogLevel.NONE) {
+            if(Settings.logLevel != LogLevel.NONE) {
                 Controller.getLogger().logImmediately("Finished range scan!");
             }
         };

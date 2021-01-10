@@ -47,12 +47,10 @@ public class Controller {
     public Button btn_clearLogs;
 
     private static ListView<SNMPTarget> staticLsv_records;
-    private static TextField staticTxt_timeout;
 
     private TableView<Varbind> tbv_varbinds;
     private ListView<SnmpNotification> lsv_traps;
     private static Logger logger;
-    private static LogLevel logLevel;
     private static ObservableList<SnmpNotification> trapsList;
     private static ObservableList<SnmpNotification> informsList;
 
@@ -177,23 +175,26 @@ public class Controller {
         lsv_mibModules.setTitleText("MIB Modules");
 
         staticLsv_records = lsv_records;
-        staticTxt_timeout = txt_timeout;
 
         logger = new Logger(txa_log);
 
+        txt_timeout.setText(String.valueOf(Settings.timeout));
         txt_timeout.textProperty().addListener((observable, oldValue, newValue) -> {
             if(!newValue.matches("[1-9][0-9]{0,5}")) {
                 txt_timeout.setText(oldValue);
             }
+            else {
+                Settings.timeout = Integer.parseInt(txt_timeout.getText());
+            }
         });
 
-        logLevel = LogLevel.SOME;
         tgg_logLevel.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            logLevel = LogLevel.values()[tgg_logLevel.getToggles().indexOf(newValue)];
-            txa_log.setVisible(logLevel != LogLevel.NONE);
-            txa_log.setManaged(logLevel != LogLevel.NONE);
-            btn_clearLogs.setVisible(logLevel != LogLevel.NONE);
+            Settings.logLevel = LogLevel.values()[tgg_logLevel.getToggles().indexOf(newValue)];
+            txa_log.setVisible(Settings.logLevel != LogLevel.NONE);
+            txa_log.setManaged(Settings.logLevel != LogLevel.NONE);
+            btn_clearLogs.setVisible(Settings.logLevel != LogLevel.NONE);
         });
+        tgg_logLevel.selectToggle(tgg_logLevel.getToggles().get(Settings.logLevel.ordinal()));
     }
 
     private void onBtn_scan(ActionEvent event) {
@@ -299,10 +300,6 @@ public class Controller {
         return logger;
     }
 
-    public static LogLevel getLogLevel() {
-        return logLevel;
-    }
-
     public static void refreshListView() {
         if(Platform.isFxApplicationThread()) {
             staticLsv_records.refresh();
@@ -312,10 +309,6 @@ public class Controller {
                 staticLsv_records.refresh();
             });
         }
-    }
-
-    public static int getTimeout() {
-        return Integer.parseInt(staticTxt_timeout.getText());
     }
 
     public static void addNotification(SnmpNotification notification) {

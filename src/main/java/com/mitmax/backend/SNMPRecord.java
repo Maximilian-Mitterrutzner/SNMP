@@ -26,7 +26,7 @@ class SNMPRecord {
         target.setAddress(ip);
         target.setCommunity(community);
         SimpleSnmpTargetConfig config = new SimpleSnmpTargetConfig();
-        config.setTimeout(Controller.getTimeout() / 2);
+        config.setTimeout(Settings.timeout / 2);
         config.setRetries(1);
         context = SnmpFactory.getInstance().newContext(target, SNMPManager.getMib(), config, null);
 
@@ -49,7 +49,7 @@ class SNMPRecord {
     void retrieve(List<String> oids, boolean isSubnet) {
         pendingRequests.incrementAndGet();
 
-        if(!isSubnet && Controller.getLogLevel() != LogLevel.NONE) {
+        if(!isSubnet && Settings.logLevel != LogLevel.NONE) {
             Controller.getLogger().logImmediately("Sent request! (" + ip + " - " + community + " - " + oids + ")");
         }
 
@@ -71,12 +71,12 @@ class SNMPRecord {
                     parent.onRetrievalDone(true);
                     return;
                 } catch (TimeoutException ex) {
-                    if(Controller.getLogLevel() == LogLevel.FULL
-                            || (Controller.getLogLevel() == LogLevel.SOME && !isSubnet)) {
+                    if(Settings.logLevel == LogLevel.FULL
+                    || (Settings.logLevel == LogLevel.SOME && !isSubnet)) {
                         Controller.getLogger().logBuffered("Request timed out! (" + ip + " - " + community + " - " + oids.toString() + ")");
                     }
                 } catch (SnmpException ex) {
-                    if(Controller.getLogLevel() != LogLevel.NONE) {
+                    if(Settings.logLevel != LogLevel.NONE) {
                         Controller.getLogger().logImmediately(ex.getMessage().split(": ")[2]);
                     }
                 } catch (Exception ex) {
@@ -87,7 +87,7 @@ class SNMPRecord {
                 parent.onRetrievalDone(false);
             }, oids);
         } catch (IllegalArgumentException ex) {
-            if(Controller.getLogLevel() != LogLevel.NONE) {
+            if(Settings.logLevel != LogLevel.NONE) {
                 Controller.getLogger().logImmediately("OID " + ex.getMessage());
             }
             pendingRequests.decrementAndGet();
