@@ -43,6 +43,8 @@ public class Controller {
     public ToggleGroup tgg_logLevel;
     public ModeTabPane<ListView<SnmpNotification>> mtp_trapTypes;
     public BorderPane brp_container;
+    public Button btn_clearTargets;
+    public Button btn_clearLogs;
 
     private static ListView<SNMPTarget> staticLsv_records;
     private static TextField staticTxt_timeout;
@@ -131,6 +133,8 @@ public class Controller {
         txt_oid.textProperty().addListener((observable, oldValue, newValue) -> txt_oid.setStyle(null));
 
         btn_request.setOnAction(this::onBtn_request);
+        btn_clearTargets.setOnAction(event -> SNMPManager.getSnmpTargets().clear());
+        btn_clearLogs.setOnAction(event -> txa_log.clear());
 
         //Traps
         lsv_traps = new ListView<>();
@@ -188,6 +192,7 @@ public class Controller {
             logLevel = LogLevel.values()[tgg_logLevel.getToggles().indexOf(newValue)];
             txa_log.setVisible(logLevel != LogLevel.NONE);
             txa_log.setManaged(logLevel != LogLevel.NONE);
+            btn_clearLogs.setVisible(logLevel != LogLevel.NONE);
         });
     }
 
