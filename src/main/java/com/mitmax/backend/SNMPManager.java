@@ -4,6 +4,7 @@ import com.mitmax.frontend.Controller;
 import com.mitmax.frontend.LogLevel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableMap;
 import org.soulwing.snmp.Mib;
 import org.soulwing.snmp.MibFactory;
@@ -22,25 +23,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SNMPManager {
     private static final ObservableMap<String, SNMPTarget> snmpTargets;
     private static final ObservableMap<String, SNMPTarget> pendingSnmpTargets;
-    private static final Mib mib;
     private static final AtomicInteger pendingSnmpTargetsCount;
     private static final ExecutorService executorService;
+    private static Mib mib;
     private static SnmpListener listener;
     private static Runnable onNoMorePendingTargets;
 
     static {
         snmpTargets = FXCollections.observableHashMap();
         pendingSnmpTargets = FXCollections.observableHashMap();
-        mib = MibFactory.getInstance().newMib();
-        try {
-            for(String module : Settings.mibModules) {
-                mib.load(module);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            Platform.exit();
-        }
-
         executorService = Executors.newCachedThreadPool(runnable -> {
             Thread thread = new Thread(runnable);
             thread.setPriority(Thread.MIN_PRIORITY);
@@ -48,6 +39,8 @@ public class SNMPManager {
         });
         pendingSnmpTargetsCount = new AtomicInteger();
         onNoMorePendingTargets = () -> {};
+
+        Settings.mibModules.addListener((ListChangeListener<String>) c -> updateMib());
     }
 
     /**
@@ -164,11 +157,30 @@ public class SNMPManager {
     }
 
     /**
-     * Getter for the MIB.
-     * @return the MIB containing the loaded MIB-modules.
+     * Getter for the {@link Mib}.
+     * Calls {@code updateMib()} if the {@link Mib} is {@code null}.
+     * @return the {@link Mib} containing the loaded {@link Mib}-modules.
      */
     static Mib getMib() {
+        if(mib == null) {
+            updateMib();
+        }
+
         return mib;
+    }
+
+    /**
+     * Updates the {@link Mib} to include all modules specified in {@link Settings}{@code .mibModules} (and only those).
+     */
+    static void updateMib() {
+        mib = MibFactory.getInstance().newMib();
+        for(String module : Settings.mibModules) {
+            try {
+                mib.load(module);
+            } catch (IOException ex) {
+                Controller.getLogger().logImmediately("MIB module '" + module + "' could not be loaded");
+            }
+        }
     }
 
     /**

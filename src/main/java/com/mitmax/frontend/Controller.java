@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import org.soulwing.snmp.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -126,6 +127,22 @@ public class Controller {
         for(String community : Settings.communities) {
             mtp_communities.getTabs().add(new Tab(community));
         }
+        Settings.communities.addListener((ListChangeListener<String>) c -> {
+            while (c.next()) {
+                for(String added : c.getAddedSubList()) {
+                    mtp_communities.getTabs().add(new Tab(added));
+                }
+                for(String removed : c.getRemoved()) {
+                    ArrayList<Tab> toRemove = new ArrayList<>();
+                    for (Tab tab : mtp_communities.getTabs()) {
+                        if(tab.getText().equals(removed)) {
+                            toRemove.add(tab);
+                        }
+                    }
+                    mtp_communities.getTabs().removeAll(toRemove);
+                }
+            }
+        });
 
         lsv_targets.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
         mtp_communities.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -169,8 +186,6 @@ public class Controller {
 
         mtp_trapTypes.setPrefSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
-        SNMPManager.registerTrapListener();
-
         //Settings
         lsv_communities.setBackingList(Settings.communities);
         lsv_communities.setNewText("Community");
@@ -204,6 +219,8 @@ public class Controller {
             btn_clearLogs.setVisible(Settings.logLevel != LogLevel.NONE);
         });
         tgg_logLevel.selectToggle(tgg_logLevel.getToggles().get(Settings.logLevel.ordinal()));
+
+        SNMPManager.registerTrapListener();
     }
 
     /**
