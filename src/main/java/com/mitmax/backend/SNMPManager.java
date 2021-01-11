@@ -49,7 +49,7 @@ public class SNMPManager {
      * @param ip a {@code String} representation of the address to scan.
      * @param ipBinary a binary representation of the address to scan of type {@code long}.
      * @param community a {@code String} containing the community to perform the scan in.
-     * @param oids a list of {@code Strings} containing OIDs to scan for.
+     * @param oids a list of {@code Strings} containing {@link org.snmp4j.smi.OID}s to scan for.
      * @param isSubnet a {@code boolean} determining whether this operation is performed
      *                 as a part of a larger subnet- or range-scan.
      */
@@ -129,13 +129,18 @@ public class SNMPManager {
     }
 
     /**
-     * Closes all open {@link org.soulwing.snmp.SnmpContext}s and stops the trap/inform {@link SnmpListener}.
+     * Closes all open {@link org.soulwing.snmp.SnmpContext}s.
      */
     public static void closeAll() {
         for(SNMPTarget target : snmpTargets.values()) {
             target.close();
         }
+    }
 
+    /**
+     * Stops the {@link SnmpListener} listening for trap/inform.
+     */
+    public static void closeListener() {
         listener.close();
     }
 
@@ -169,6 +174,9 @@ public class SNMPManager {
 
         if(successful) {
             Platform.runLater(() -> snmpTargets.put(target.getIp(), target));
+        }
+        else {
+            target.close();
         }
 
         if(pendingSnmpTargetsCount.get() == 0) {

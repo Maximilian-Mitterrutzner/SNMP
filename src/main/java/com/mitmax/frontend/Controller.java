@@ -139,7 +139,10 @@ public class Controller {
         txt_oid.textProperty().addListener((observable, oldValue, newValue) -> txt_oid.setStyle(null));
 
         btn_request.setOnAction(this::onBtn_request);
-        btn_clearTargets.setOnAction(event -> SNMPManager.getSnmpTargets().clear());
+        btn_clearTargets.setOnAction(event -> {
+            SNMPManager.closeAll();
+            SNMPManager.getSnmpTargets().clear();
+        });
         btn_clearLogs.setOnAction(event -> txa_log.clear());
 
         //Traps

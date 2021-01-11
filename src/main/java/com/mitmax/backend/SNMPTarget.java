@@ -30,10 +30,6 @@ public class SNMPTarget  implements Comparable<SNMPTarget> {
         records = new HashMap<>(Settings.communities.size());
         hostName = ip;
         isAdded = false;
-
-        for(String community : Settings.communities) {
-            records.put(community, new SNMPRecord(ip, community, this));
-        }
     }
 
     /**
@@ -44,7 +40,7 @@ public class SNMPTarget  implements Comparable<SNMPTarget> {
      *                 larger subnet- or range-scan.
      */
     void retrieve(String community, List<String> oids, boolean isSubnet) {
-        records.get(community).retrieve(oids, isSubnet);
+        getRecordByCommunity(community).retrieve(oids, isSubnet);
     }
 
     /**
@@ -62,7 +58,7 @@ public class SNMPTarget  implements Comparable<SNMPTarget> {
      * @return the {@link ObservableList} of {@link Varbind}s of the {@link SNMPRecord} specified by the community.
      */
     public ObservableList<Varbind> getVarbinds(String community) {
-        return records.get(community).getVarbinds();
+        return getRecordByCommunity(community).getVarbinds();
     }
 
     /**
@@ -126,6 +122,22 @@ public class SNMPTarget  implements Comparable<SNMPTarget> {
      */
     void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    /**
+     * Gets the {@link SNMPRecord} specified by the community.
+     * @param community the {@code String} containing the community to lookup the {@link SNMPRecord} by.
+     * @return the {@link SNMPRecord} specified by the community.
+     */
+    private SNMPRecord getRecordByCommunity(String community) {
+        SNMPRecord record = records.get(community);
+
+        if(record == null) {
+            record = new SNMPRecord(ip, community, this);
+            records.put(community, record);
+        }
+
+        return record;
     }
 
     /**
