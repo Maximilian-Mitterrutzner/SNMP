@@ -12,6 +12,8 @@ import org.soulwing.snmp.SnmpListener;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -22,6 +24,7 @@ public class SNMPManager {
     private static final ObservableMap<String, SNMPTarget> pendingSnmpTargets;
     private static final Mib mib;
     private static final AtomicInteger pendingSnmpTargetsCount;
+    private static final ExecutorService executorService;
     private static SnmpListener listener;
     private static Runnable onNoMorePendingTargets;
 
@@ -38,6 +41,11 @@ public class SNMPManager {
             Platform.exit();
         }
 
+        executorService = Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setPriority(Thread.MIN_PRIORITY);
+            return thread;
+        });
         pendingSnmpTargetsCount = new AtomicInteger();
         onNoMorePendingTargets = () -> {};
     }
@@ -54,7 +62,7 @@ public class SNMPManager {
      *                 as a part of a larger subnet- or range-scan.
      */
     public static void scanAddress(String ip, long ipBinary, String community, List<String> oids, boolean isSubnet) {
-        new Thread(() -> {
+        executorService.execute(() -> {
             SNMPTarget target = snmpTargets.get(ip);
 
             if(target == null) {
@@ -67,7 +75,7 @@ public class SNMPManager {
             }
 
             target.retrieve(community, oids, isSubnet);
-        }).start();
+        });
     }
 
     /**
@@ -78,7 +86,7 @@ public class SNMPManager {
      * @param mask an {@code int} specifying the subnet-mask.
      */
     public static void scanSubnet(String ip, String community, int mask) {
-        Thread scanThread = new Thread(() -> {
+        executorService.execute(() -> {
             if(Settings.logLevel != LogLevel.NONE) {
                 Controller.getLogger().logImmediately("Started subnet scan!");
             }
@@ -100,8 +108,6 @@ public class SNMPManager {
                 scanAddress(AddressHelper.getAsString(currentAddress), currentAddress, community, Settings.initialRequests, true);
             }
         });
-        scanThread.setPriority(Thread.MIN_PRIORITY);
-        scanThread.start();
     }
 
     /**
@@ -111,37 +117,41 @@ public class SNMPManager {
      * @param end the {@code String} containing the end-ip.
      * @param community the {@code String} containing the community to perform this scan in.
      */
-    public static void scanRange(long address, long end, String community) {
-        if(Settings.logLevel != LogLevel.NONE) {
-            Controller.getLogger().logImmediately("Started range scan!");
-        }
-
-        onNoMorePendingTargets = () -> {
+    public static void scanRange(final long address, long end, String community) {
+        executorService.execute(() -> {
+            long startAddress = address;
             if(Settings.logLevel != LogLevel.NONE) {
-                Controller.getLogger().logImmediately("Finished range scan!");
+                Controller.getLogger().logImmediately("Started range scan!");
             }
-        };
 
-        while(address <= end) {
-            scanAddress(AddressHelper.getAsString(address), address, community, Settings.initialRequests, true);
-            address++;
-        }
+            onNoMorePendingTargets = () -> {
+                if(Settings.logLevel != LogLevel.NONE) {
+                    Controller.getLogger().logImmediately("Finished range scan!");
+                }
+            };
+
+            while(startAddress <= end) {
+                scanAddress(AddressHelper.getAsString(startAddress), startAddress, community, Settings.initialRequests, true);
+                startAddress++;
+            }
+        });
     }
 
     /**
      * Closes all open {@link org.soulwing.snmp.SnmpContext}s.
      */
-    public static void closeAll() {
+    public static void closeTargets() {
         for(SNMPTarget target : snmpTargets.values()) {
             target.close();
         }
     }
 
     /**
-     * Stops the {@link SnmpListener} listening for trap/inform.
+     * Stops the {@link SnmpListener} listening for trap/inform and shuts the {@link ExecutorService} down.
      */
-    public static void closeListener() {
+    public static void stop() {
         listener.close();
+        executorService.shutdown();
     }
 
     /**

@@ -3,10 +3,7 @@ package com.mitmax.frontend;
 import com.mitmax.backend.*;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.MapChangeListener;
-import javafx.collections.ObservableList;
+import javafx.collections.*;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -53,6 +50,7 @@ public class Controller {
 
     private TableView<Varbind> tbv_varbinds;
     private ListView<SnmpNotification> lsv_traps;
+    private WeakListChangeListener<Varbind> weakListener;
     private static Logger logger;
     private static ObservableList<SnmpNotification> trapsList;
     private static ObservableList<SnmpNotification> informsList;
@@ -140,7 +138,7 @@ public class Controller {
 
         btn_request.setOnAction(this::onBtn_request);
         btn_clearTargets.setOnAction(event -> {
-            SNMPManager.closeAll();
+            SNMPManager.closeTargets();
             SNMPManager.getSnmpTargets().clear();
         });
         btn_clearLogs.setOnAction(event -> txa_log.clear());
@@ -329,13 +327,14 @@ public class Controller {
 
         ObservableList<Varbind> varbinds = selectedRecord.getVarbinds(selectedTab.getText());
         AtomicBoolean isSorting = new AtomicBoolean(false);
-        varbinds.addListener((ListChangeListener<Varbind>) c -> {
+        weakListener = new WeakListChangeListener<>(c -> {
             if(!isSorting.get()) {
                 isSorting.set(true);
                 tbv_varbinds.sort();
                 isSorting.set(false);
             }
         });
+        varbinds.addListener(weakListener);
         tbv_varbinds.setItems(varbinds);
         tbv_varbinds.getSortOrder().add(tbv_varbinds.getColumns().get(0));
         tbv_varbinds.sort();

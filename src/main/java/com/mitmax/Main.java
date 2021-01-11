@@ -36,8 +36,8 @@ public class Main extends Application {
      */
     @Override
     public void stop() {
-        SNMPManager.closeAll();
-        SNMPManager.closeListener();
+        SNMPManager.closeTargets();
+        SNMPManager.stop();
         Settings.save("./settings.txt");
     }
 
