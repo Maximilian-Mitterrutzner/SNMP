@@ -6,6 +6,9 @@ import javafx.collections.ObservableList;
 
 import java.io.*;
 
+/**
+ * Static utility class for storing, accessing, loading and saving application settings.
+ */
 public class Settings {
     public static LogLevel logLevel = LogLevel.SOME;
     public static int timeout = 5000;
@@ -19,6 +22,13 @@ public class Settings {
             "1.3.6.1.2.1.1.7"); //sysServices
     public static ObservableList<String> mibModules = FXCollections.observableArrayList("SNMPv2-MIB", "IF-MIB");
 
+    /**
+     * Saves the application settings on the specified path.
+     * If the file doesn't exist, it will be created.
+     * Exceptions are ignored, because this function is only called on application exit,
+     * and as such no-one will ever see any displayed errors.
+     * @param path the {@code String} containing the path of the file where the settings will be saved.
+     */
     public static void save(String path) {
         try {
             File file = new File(path);
@@ -40,6 +50,12 @@ public class Settings {
         } catch (IOException ignore) {}
     }
 
+    /**
+     * Loads the application settings from the specified path.
+     * If the file doesn't exist, nothing happens.
+     * If an exception occurs, all values are reset to default.
+     * @param path the {@code String} containing the path where the settings will be loaded from.
+     */
     public static void load(String path) {
         try {
             File file = new File(path);
@@ -69,6 +85,11 @@ public class Settings {
         }
     }
 
+    /**
+     * Helper method to convert a {@link ObservableList} to a {@code String} delimited by '#'.
+     * @param list the {@link ObservableList} (of type {@code String}) to convert.
+     * @return the {@code String} representation of the {@link ObservableList}.
+     */
     private static String listToString(ObservableList<String> list) {
         StringBuilder builder = new StringBuilder();
         for(String request : list) {

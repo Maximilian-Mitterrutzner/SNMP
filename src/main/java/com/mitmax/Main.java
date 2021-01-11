@@ -10,7 +10,16 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+/**
+ * Main application class.
+ */
 public class Main extends Application {
+    /**
+     * Overridden function which is executed on program start.
+     * It first reads settings from the disk then it loads the FXML.
+     * @param primaryStage primary {@link Stage} supplied by JavaFX on startup.
+     * @throws IOException the Exception thrown on unsuccessful FXML-load.
+     */
     @Override
     public void start(Stage primaryStage) throws IOException {
         Settings.load("./settings.txt");
@@ -21,6 +30,10 @@ public class Main extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Overridden function which is executed on program exit.
+     * It saves the current settings to the disk.
+     */
     @Override
     public void stop() {
         SNMPManager.closeAll();
